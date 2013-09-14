@@ -12,4 +12,7 @@
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
 
+- (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock
+                     waitUntilDone:(BOOL)wait;
+
 @end

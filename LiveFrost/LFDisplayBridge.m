@@ -37,6 +37,18 @@
 	[(NSMutableSet *)self.subscribedViews removeObject:object];
 }
 
+- (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait
+{
+    if (wait)
+    {
+        dispatch_sync(_renderQueue, renderBlock);
+    }
+    else
+    {
+        dispatch_async(_renderQueue, renderBlock);
+    }
+}
+
 - (void) handleDisplayLink:(CADisplayLink *)displayLink {
 	[self refresh];
 }
