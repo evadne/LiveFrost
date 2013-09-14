@@ -37,14 +37,10 @@
 	[(NSMutableSet *)self.subscribedViews removeObject:object];
 }
 
-- (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait
-{
-    if (wait)
-    {
+- (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait {
+    if (wait) {
         dispatch_sync(_renderQueue, renderBlock);
-    }
-    else
-    {
+    } else {
         dispatch_async(_renderQueue, renderBlock);
     }
 }
