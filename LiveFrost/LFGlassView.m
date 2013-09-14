@@ -84,7 +84,7 @@
         
         [[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
             CGFloat inputRadius = _blurRadius;
-            NSUInteger radius = floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+            uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
             radius += (radius + 1) % 2;
             
             vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
