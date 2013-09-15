@@ -70,7 +70,12 @@
 	CGColorSpaceRelease(colorSpace);
 	
 	CGContextConcatCTM(effectInContext, (CGAffineTransform){
-		1, 0, 0, -1, 0, scaledSize.height
+		.a = 1,
+        .b = 0,
+        .c = 0,
+        .d = -1,
+        .tx = 0,
+        .ty = scaledSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
