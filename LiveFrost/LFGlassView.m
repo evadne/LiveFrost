@@ -39,7 +39,6 @@
 }
 
 - (void) refresh {
-	
 	UIView *superview = self.superview;
 	
 	CGRect visibleRect = self.frame;
@@ -75,31 +74,31 @@
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.hidden = YES;
-        [superview.layer renderInContext:effectInContext];
-        self.hidden = NO;
-        
-        [[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
-            CGFloat inputRadius = _blurRadius;
-            uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);             radius += (radius + 1) % 2;
-            
-            vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
-            vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
-            vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
-            
-            CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
-            
-            CGContextRelease(effectInContext);
-            CGContextRelease(effectOutContext);
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.layer.contents = (__bridge id)(outImage);
-                CGImageRelease(outImage);
-            });
-        } waitUntilDone:NO];
-    });
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		self.hidden = YES;
+		[superview.layer renderInContext:effectInContext];
+		self.hidden = NO;
+		
+		[[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
+			CGFloat inputRadius = _blurRadius;
+			uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);             radius += (radius + 1) % 2;
+			
+			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
+			vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
+			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
+			
+			CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
+			
+			CGContextRelease(effectInContext);
+			CGContextRelease(effectOutContext);
+			
+			dispatch_async(dispatch_get_main_queue(), ^{
+				self.layer.contents = (__bridge id)(outImage);
+				CGImageRelease(outImage);
+			});
+		} waitUntilDone:NO];
+	});
 }
 
 @end
