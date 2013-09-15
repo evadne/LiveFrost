@@ -172,11 +172,9 @@
 
 - (void) didMoveToSuperview {
 	[super didMoveToSuperview];
-	self.layer.borderColor = [UIColor greenColor].CGColor;
-	self.layer.borderWidth = 4.0f;
 	[self recreateImageBuffers];
 	[self refresh];
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 }
 
 - (void) refresh {
