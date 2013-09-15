@@ -36,15 +36,15 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 }
 
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-    dispatch_async(_renderQueue, ^{
-        CFSetAddValue(_subscribedViews, (__bridge const void*)object);
-    });
+	dispatch_async(_renderQueue, ^{
+		CFSetAddValue(_subscribedViews, (__bridge const void*)object);
+	});
 }
 
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-    dispatch_async(_renderQueue, ^{
-        CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
-    });
+	dispatch_async(_renderQueue, ^{
+		CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
+	});
 }
 
 - (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait {
@@ -61,8 +61,8 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 
 - (void) dealloc {
 	[_displayLink invalidate];
-    dispatch_sync(_renderQueue, ^{});
-    CFRelease(_subscribedViews);
+	dispatch_sync(_renderQueue, ^{});
+	CFRelease(_subscribedViews);
 }
 
 - (void) refresh {

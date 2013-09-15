@@ -2,6 +2,10 @@
 #import "LFDisplayBridge.h"
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
+
+@property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
+- (void)updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius;
+
 @end
 
 @implementation LFGlassView
@@ -36,6 +40,27 @@
 	} else {
 		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
 	}
+}
+
+- (void) setBlurRadius:(CGFloat)blurRadius
+{
+	if (blurRadius == _blurRadius) {
+		return;
+	}
+	
+	[self willChangeValueForKey:@"blurRadius"];
+	
+	_blurRadius = blurRadius;
+	[self updatePrecalculatedBlurKernelWithBlurRadius:blurRadius];
+	
+	[self didChangeValueForKey:@"blurRadius"];
+}
+
+- (void)updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius
+{
+	uint32_t radius = (uint32_t)floor(blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+	radius += (radius + 1) % 2;
+	_precalculatedBlurKernel = radius;
 }
 
 - (void) refresh {
@@ -86,13 +111,11 @@
 		self.hidden = NO;
 		
 		[[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
-			CGFloat inputRadius = _blurRadius;
-			uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
-			radius += (radius + 1) % 2;
+			uint32_t blurKernel = _precalculatedBlurKernel;
 			
-			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
-			vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
-			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
+			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+			vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 			
 			CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
 			
