@@ -3,7 +3,7 @@
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
-@property (nonatomic, assign, readonly) CGSize cachedScaledSize;
+@property (nonatomic, assign, readonly) CGSize bufferSize;
 
 @property (nonatomic, assign, readonly) CGContextRef effectInContext;
 @property (nonatomic, assign, readonly) CGContextRef effectOutContext;
@@ -12,7 +12,10 @@
 @property (nonatomic, assign, readonly) vImage_Buffer effectOutBuffer;
 
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
-- (void) updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius;
+
+- (void) updatePrecalculatedBlurKernel;
+- (CGSize) scaledSize;
+- (void) recreateImageBuffers;
 
 @end
 
@@ -42,7 +45,7 @@
 	self.userInteractionEnabled = NO;
 }
 
-- (void)dealloc {
+- (void) dealloc {
 	if (_effectInContext) {
 		CGContextRelease(_effectInContext);
 	}
@@ -64,37 +67,66 @@
 		return;
 	}
 	[self willChangeValueForKey:@"blurRadius"];
+	
 	_blurRadius = blurRadius;
-	[self updatePrecalculatedBlurKernelWithBlurRadius:blurRadius];
+	[self updatePrecalculatedBlurKernel];
+	
 	[self didChangeValueForKey:@"blurRadius"];
 }
 
-- (void) updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius {
-	uint32_t radius = (uint32_t)floor(blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+- (void) updatePrecalculatedBlurKernel {
+	uint32_t radius = (uint32_t)floor(_blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
 	radius += (radius + 1) % 2;
 	_precalculatedBlurKernel = radius;
+}
+
+- (void) setScaleFactor:(CGFloat)scaleFactor
+{
+	if (scaleFactor == _scaleFactor) {
+		return;
+	}
+	[self willChangeValueForKey:@"scaleFactor"];
+	
+	_scaleFactor = scaleFactor;
+	
+	CGSize scaledSize = [self scaledSize];
+	
+	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
+		_bufferSize = scaledSize;
+		[self recreateImageBuffers];
+	}
+	
+	[self didChangeValueForKey:@"scaleFactor"];
+}
+
+- (CGSize) scaledSize {
+	CGSize scaledSize = (CGSize){
+		_scaleFactor * CGRectGetWidth(self.bounds),
+		_scaleFactor * CGRectGetHeight(self.bounds)
+	};
+	return scaledSize;
 }
 
 - (void) layoutSubviews {
 	[super layoutSubviews];
 	
-	CGRect visibleRect = self.frame;
-	CGSize scaledSize = (CGSize){
-		_scaleFactor * CGRectGetWidth(visibleRect),
-		_scaleFactor * CGRectGetHeight(visibleRect)
-	};
+	CGSize scaledSize = [self scaledSize];
 	
-	if (CGSizeEqualToSize(_cachedScaledSize, scaledSize)) {
-		return;
-	} else {
-		_cachedScaledSize = scaledSize;
+	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
+		_bufferSize = scaledSize;
+		[self recreateImageBuffers];
 	}
+}
+
+- (void) recreateImageBuffers {
+	CGRect visibleRect = self.frame;
+	CGSize bufferSize = _bufferSize;
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	
-	CGContextRef effectInContext = CGBitmapContextCreate(NULL, scaledSize.width, scaledSize.height, 8, scaledSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CGContextRef effectInContext = CGBitmapContextCreate(NULL, bufferSize.width, bufferSize.height, 8, bufferSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	
-	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, scaledSize.width, scaledSize.height, 8, scaledSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, bufferSize.width, bufferSize.height, 8, bufferSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	
 	CGColorSpaceRelease(colorSpace);
 	
@@ -104,7 +136,7 @@
 		.c = 0,
 		.d = -1,
 		.tx = 0,
-		.ty = scaledSize.height
+		.ty = bufferSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
@@ -148,10 +180,10 @@
 	
 	self.hidden = YES;
 	if (!self.superview) {
-        return;
-    }
+		return;
+	}
 	[self.superview.layer renderInContext:effectInContext];
-    self.hidden = NO;
+	self.hidden = NO;
 	
 	uint32_t blurKernel = _precalculatedBlurKernel;
 	
