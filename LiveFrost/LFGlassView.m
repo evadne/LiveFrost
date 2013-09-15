@@ -77,7 +77,7 @@
 	CGSize scaledSize = [self scaledSize];
 	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
 		_bufferSize = scaledSize;
-		[self setNeedsLayout];
+        // NOTE: -refresh automatically takes place via CADisplayLink
 	}
 }
 
