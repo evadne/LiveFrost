@@ -71,11 +71,11 @@
 	
 	CGContextConcatCTM(effectInContext, (CGAffineTransform){
 		.a = 1,
-        .b = 0,
-        .c = 0,
-        .d = -1,
-        .tx = 0,
-        .ty = scaledSize.height
+		.b = 0,
+		.c = 0,
+		.d = -1,
+		.tx = 0,
+		.ty = scaledSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
@@ -87,7 +87,8 @@
 		
 		[[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
 			CGFloat inputRadius = _blurRadius;
-			uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);             radius += (radius + 1) % 2;
+			uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+			radius += (radius + 1) % 2;
 			
 			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
 			vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
