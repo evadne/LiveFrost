@@ -70,7 +70,6 @@
 	
 	CGColorSpaceRelease(colorSpace);
 	
-	self.hidden = YES;
 	CGContextConcatCTM(effectInContext, (CGAffineTransform){
 		1, 0, 0, -1, 0, scaledSize.height
 	});
@@ -78,14 +77,13 @@
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
     
     dispatch_async(dispatch_get_main_queue(), ^{
+        self.hidden = YES;
         [superview.layer renderInContext:effectInContext];
-        
         self.hidden = NO;
         
         [[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
             CGFloat inputRadius = _blurRadius;
-            uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
-            radius += (radius + 1) % 2;
+            uint32_t radius = (uint32_t)floor(inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);             radius += (radius + 1) % 2;
             
             vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
             vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, radius, radius, 0, kvImageEdgeExtend);
