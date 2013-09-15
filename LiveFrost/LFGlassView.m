@@ -4,6 +4,7 @@
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
 @property (nonatomic, assign, readonly) CGSize bufferSize;
+@property (nonatomic, assign, readonly) CGSize scaledSize;
 
 @property (nonatomic, assign, readonly) CGContextRef effectInContext;
 @property (nonatomic, assign, readonly) CGContextRef effectOutContext;
@@ -13,13 +14,15 @@
 
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 
+@property (nonatomic, assign, readwrite) BOOL needsImageBuffersRecreation;
+
 - (void) updatePrecalculatedBlurKernel;
-- (CGSize) scaledSize;
 - (void) recreateImageBuffers;
 
 @end
 
 @implementation LFGlassView
+@dynamic scaledSize;
 
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
@@ -40,9 +43,12 @@
 	self.layer.cornerRadius = 20.0f;
 	self.blurRadius = 4.0f;
 	self.scaleFactor = 0.25f;
-	self.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.25f];
+	self.backgroundColor = [UIColor redColor];
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
+	self.layer.actions = @{
+		@"contents": [NSNull null]
+	};
 }
 
 - (void) dealloc {
@@ -52,26 +58,12 @@
 	if (_effectOutContext) {
 		CGContextRelease(_effectOutContext);
 	}
-}
-
-- (void) willMoveToSuperview:(UIView*)superview {
-	if (superview) {
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	} else {
-		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
-	}
+	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
 }
 
 - (void) setBlurRadius:(CGFloat)blurRadius {
-	if (blurRadius == _blurRadius) {
-		return;
-	}
-	[self willChangeValueForKey:@"blurRadius"];
-	
 	_blurRadius = blurRadius;
 	[self updatePrecalculatedBlurKernel];
-	
-	[self didChangeValueForKey:@"blurRadius"];
 }
 
 - (void) updatePrecalculatedBlurKernel {
@@ -80,23 +72,13 @@
 	_precalculatedBlurKernel = radius;
 }
 
-- (void) setScaleFactor:(CGFloat)scaleFactor
-{
-	if (scaleFactor == _scaleFactor) {
-		return;
-	}
-	[self willChangeValueForKey:@"scaleFactor"];
-	
+- (void) setScaleFactor:(CGFloat)scaleFactor {
 	_scaleFactor = scaleFactor;
-	
 	CGSize scaledSize = [self scaledSize];
-	
 	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
 		_bufferSize = scaledSize;
-		[self recreateImageBuffers];
+		[self setNeedsLayout];
 	}
-	
-	[self didChangeValueForKey:@"scaleFactor"];
 }
 
 - (CGSize) scaledSize {
@@ -107,20 +89,47 @@
 	return scaledSize;
 }
 
-- (void) layoutSubviews {
-	[super layoutSubviews];
-	
-	CGSize scaledSize = [self scaledSize];
-	
-	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
-		_bufferSize = scaledSize;
+- (void) setFrame:(CGRect)frame {
+	CGRect fromFrame = self.frame;
+	[super setFrame:frame];
+	if (CGRectEqualToRect(fromFrame, self.frame)) {
+		[self setNeedsImageBuffersRecreation];
+	}
+}
+
+- (void) setBounds:(CGRect)bounds {
+	CGRect fromFrame = self.frame;
+	[super setBounds:bounds];
+	if (CGRectEqualToRect(fromFrame, self.frame)) {
+		[self setNeedsImageBuffersRecreation];
+	}
+}
+
+- (void) setCenter:(CGPoint)center {
+	CGRect fromFrame = self.frame;
+	[super setCenter:center];
+	if (CGRectEqualToRect(fromFrame, self.frame)) {
+		[self setNeedsImageBuffersRecreation];
+	}
+}
+
+- (void) setNeedsImageBuffersRecreation {
+	_needsImageBuffersRecreation = YES;
+}
+
+- (void) recreateImageBuffersIfNeeded {
+	if (_needsImageBuffersRecreation) {
 		[self recreateImageBuffers];
+		_needsImageBuffersRecreation = NO;
 	}
 }
 
 - (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
-	CGSize bufferSize = _bufferSize;
+	CGSize bufferSize = self.scaledSize;
+	if (CGSizeEqualToSize(bufferSize, CGSizeZero)) {
+		return;
+	}
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	
@@ -131,57 +140,58 @@
 	CGColorSpaceRelease(colorSpace);
 	
 	CGContextConcatCTM(effectInContext, (CGAffineTransform){
-		.a = 1,
-		.b = 0,
-		.c = 0,
-		.d = -1,
-		.tx = 0,
-		.ty = bufferSize.height
+		1, 0, 0, -1, 0, bufferSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
 	
-	CGContextRef prevEffectInContext = _effectInContext;
-	if (prevEffectInContext) {
-		CGContextRelease(prevEffectInContext);
+	if (_effectInContext) {
+		CGContextRelease(_effectInContext);
 	}
 	_effectInContext = effectInContext;
 	
-	CGContextRef prevEffectOutContext = _effectOutContext;
-	if (prevEffectOutContext) {
-		CGContextRelease(prevEffectOutContext);
+	if (_effectOutContext) {
+		CGContextRelease(_effectOutContext);
 	}
 	_effectOutContext = effectOutContext;
 	
-	vImage_Buffer effectInBuffer = (vImage_Buffer){
+	_effectInBuffer = (vImage_Buffer){
 		.data = CGBitmapContextGetData(effectInContext),
 		.width = CGBitmapContextGetWidth(effectInContext),
 		.height = CGBitmapContextGetHeight(effectInContext),
 		.rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
 	};
 	
-	_effectInBuffer = effectInBuffer;
-	
-	vImage_Buffer effectOutBuffer = (vImage_Buffer){
+	_effectOutBuffer = (vImage_Buffer){
 		.data = CGBitmapContextGetData(effectOutContext),
 		.width = CGBitmapContextGetWidth(effectOutContext),
 		.height = CGBitmapContextGetHeight(effectOutContext),
 		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
 	};
-	
-	_effectOutBuffer = effectOutBuffer;
+}
+
+- (void) didMoveToSuperview {
+	[super didMoveToSuperview];
+	self.layer.borderColor = [UIColor greenColor].CGColor;
+	self.layer.borderWidth = 4.0f;
+	[self recreateImageBuffers];
+	[self refresh];
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 }
 
 - (void) refresh {
+	if (!self.superview) {
+		return;
+	}
+	
+	[self recreateImageBuffersIfNeeded];
+		
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
 	vImage_Buffer effectInBuffer = _effectInBuffer;
 	vImage_Buffer effectOutBuffer = _effectOutBuffer;
 	
 	self.hidden = YES;
-	if (!self.superview) {
-		return;
-	}
 	[self.superview.layer renderInContext:effectInContext];
 	self.hidden = NO;
 	
@@ -192,7 +202,6 @@
 	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 	
 	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
-	
 	self.layer.contents = (__bridge id)(outImage);
 	CGImageRelease(outImage);
 }
