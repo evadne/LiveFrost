@@ -3,8 +3,11 @@
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
+@property (nonatomic, assign, readonly) CGContextRef effectInContext;
+@property (nonatomic, assign, readonly) CGContextRef effectOutContext;
+
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
-- (void)updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius;
+- (void) updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius;
 
 @end
 
@@ -34,6 +37,15 @@
 	self.userInteractionEnabled = NO;
 }
 
+- (void)dealloc {
+	if (_effectInContext) {
+		CGContextRelease(_effectInContext);
+	}
+	if (_effectOutContext) {
+		CGContextRelease(_effectOutContext);
+	}
+}
+
 - (void) willMoveToSuperview:(UIView*)superview {
 	if (superview) {
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
@@ -42,29 +54,24 @@
 	}
 }
 
-- (void) setBlurRadius:(CGFloat)blurRadius
-{
+- (void) setBlurRadius:(CGFloat)blurRadius {
 	if (blurRadius == _blurRadius) {
 		return;
 	}
-	
 	[self willChangeValueForKey:@"blurRadius"];
-	
 	_blurRadius = blurRadius;
 	[self updatePrecalculatedBlurKernelWithBlurRadius:blurRadius];
-	
 	[self didChangeValueForKey:@"blurRadius"];
 }
 
-- (void)updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius
-{
+- (void) updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius {
 	uint32_t radius = (uint32_t)floor(blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
 	radius += (radius + 1) % 2;
 	_precalculatedBlurKernel = radius;
 }
 
-- (void) refresh {
-	UIView *superview = self.superview;
+- (void) layoutSubviews {
+	[super layoutSubviews];
 	
 	CGRect visibleRect = self.frame;
 	CGSize scaledSize = (CGSize){
@@ -76,21 +83,7 @@
 	
 	CGContextRef effectInContext = CGBitmapContextCreate(NULL, scaledSize.width, scaledSize.height, 8, scaledSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	
-	vImage_Buffer effectInBuffer = (vImage_Buffer){
-		.data = CGBitmapContextGetData(effectInContext),
-		.width = CGBitmapContextGetWidth(effectInContext),
-		.height = CGBitmapContextGetHeight(effectInContext),
-		.rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
-	};
-	
 	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, scaledSize.width, scaledSize.height, 8, scaledSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-	
-	vImage_Buffer effectOutBuffer = (vImage_Buffer){
-		.data = CGBitmapContextGetData(effectOutContext),
-		.width = CGBitmapContextGetWidth(effectOutContext),
-		.height = CGBitmapContextGetHeight(effectOutContext),
-		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
-	};
 	
 	CGColorSpaceRelease(colorSpace);
 	
@@ -105,29 +98,52 @@
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
 	
-	dispatch_async(dispatch_get_main_queue(), ^{
-		self.hidden = YES;
-		[superview.layer renderInContext:effectInContext];
-		self.hidden = NO;
-		
-		[[LFDisplayBridge sharedInstance] executeBlockOnRenderQueue:^{
-			uint32_t blurKernel = _precalculatedBlurKernel;
-			
-			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-			vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-			vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-			
-			CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
-			
-			CGContextRelease(effectInContext);
-			CGContextRelease(effectOutContext);
-			
-			dispatch_async(dispatch_get_main_queue(), ^{
-				self.layer.contents = (__bridge id)(outImage);
-				CGImageRelease(outImage);
-			});
-		} waitUntilDone:NO];
-	});
+	CGContextRef prevEffectInContext = _effectInContext;
+	if (prevEffectInContext) {
+		CGContextRelease(prevEffectInContext);
+	}
+	_effectInContext = effectInContext;
+	
+	CGContextRef prevEffectOutContext = _effectOutContext;
+	if (prevEffectOutContext) {
+		CGContextRelease(prevEffectOutContext);
+	}
+	_effectOutContext = effectOutContext;
+}
+
+- (void) refresh {
+	self.hidden = YES;
+	[self.superview.layer renderInContext:_effectInContext];
+	self.hidden = NO;
+	
+	CGContextRef effectInContext = _effectInContext;
+	
+	vImage_Buffer effectInBuffer = (vImage_Buffer){
+		.data = CGBitmapContextGetData(effectInContext),
+		.width = CGBitmapContextGetWidth(effectInContext),
+		.height = CGBitmapContextGetHeight(effectInContext),
+		.rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
+	};
+	
+	CGContextRef effectOutContext = _effectOutContext;
+	
+	vImage_Buffer effectOutBuffer = (vImage_Buffer){
+		.data = CGBitmapContextGetData(effectOutContext),
+		.width = CGBitmapContextGetWidth(effectOutContext),
+		.height = CGBitmapContextGetHeight(effectOutContext),
+		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
+	};
+	
+	uint32_t blurKernel = _precalculatedBlurKernel;
+	
+	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+	vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+	
+	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
+	
+	self.layer.contents = (__bridge id)(outImage);
+	CGImageRelease(outImage);
 }
 
 @end

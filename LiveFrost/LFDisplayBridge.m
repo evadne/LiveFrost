@@ -3,10 +3,10 @@
 void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *context);
 
 @interface LFDisplayBridge ()
+
 @property (nonatomic, readwrite, assign) CFMutableSetRef subscribedViews;
 @property (nonatomic, readonly, strong) CADisplayLink *displayLink;
-@property (nonatomic, readonly, strong) dispatch_semaphore_t renderSemaphore;
-@property (nonatomic, readonly, strong) dispatch_queue_t renderQueue;
+
 @end
 
 void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *context) {
@@ -29,30 +29,16 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 		_subscribedViews = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 		_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleDisplayLink:)];
 		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-		_renderSemaphore = dispatch_semaphore_create(1);
-		_renderQueue = dispatch_queue_create(NSStringFromClass(self.class).UTF8String, DISPATCH_QUEUE_SERIAL);
 	}
 	return self;
 }
 
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	dispatch_async(_renderQueue, ^{
-		CFSetAddValue(_subscribedViews, (__bridge const void*)object);
-	});
+	CFSetAddValue(_subscribedViews, (__bridge const void*)object);
 }
 
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	dispatch_async(_renderQueue, ^{
-		CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
-	});
-}
-
-- (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait {
-	if (wait) {
-		dispatch_sync(_renderQueue, renderBlock);
-	} else {
-		dispatch_async(_renderQueue, renderBlock);
-	}
+	CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
 }
 
 - (void) handleDisplayLink:(CADisplayLink *)displayLink {
@@ -61,17 +47,11 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 
 - (void) dealloc {
 	[_displayLink invalidate];
-	dispatch_sync(_renderQueue, ^{});
 	CFRelease(_subscribedViews);
 }
 
 - (void) refresh {
-	if (dispatch_semaphore_wait(_renderSemaphore, DISPATCH_TIME_NOW) == 0) {
-		dispatch_async(_renderQueue, ^{
-			CFSetApplyFunction(_subscribedViews, LF_refreshAllSubscribedViewsApplierFunction, NULL);
-			dispatch_semaphore_signal(_renderSemaphore);
-		});
-	}
+	CFSetApplyFunction(_subscribedViews, LF_refreshAllSubscribedViewsApplierFunction, NULL);
 }
 
 @end
