@@ -36,11 +36,15 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 }
 
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	CFSetAddValue(self.subscribedViews, (__bridge const void*)object);
+    dispatch_async(_renderQueue, ^{
+        CFSetAddValue(_subscribedViews, (__bridge const void*)object);
+    });
 }
 
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	CFSetRemoveValue(self.subscribedViews, (__bridge const void*)object);
+    dispatch_async(_renderQueue, ^{
+        CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
+    });
 }
 
 - (void) executeBlockOnRenderQueue:(void (^)(void))renderBlock waitUntilDone:(BOOL)wait {
@@ -57,13 +61,14 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 
 - (void) dealloc {
 	[_displayLink invalidate];
-	CFRelease(_subscribedViews);
+    dispatch_sync(_renderQueue, ^{});
+    CFRelease(_subscribedViews);
 }
 
 - (void) refresh {
 	if (dispatch_semaphore_wait(_renderSemaphore, DISPATCH_TIME_NOW) == 0) {
 		dispatch_async(_renderQueue, ^{
-			CFSetApplyFunction(self.subscribedViews, LF_refreshAllSubscribedViewsApplierFunction, NULL);
+			CFSetApplyFunction(_subscribedViews, LF_refreshAllSubscribedViewsApplierFunction, NULL);
 			dispatch_semaphore_signal(_renderSemaphore);
 		});
 	}
