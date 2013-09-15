@@ -3,6 +3,8 @@
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
+@property (nonatomic, assign, readonly) CGSize cachedScaledSize;
+
 @property (nonatomic, assign, readonly) CGContextRef effectInContext;
 @property (nonatomic, assign, readonly) CGContextRef effectOutContext;
 
@@ -82,6 +84,12 @@
 		_scaleFactor * CGRectGetHeight(visibleRect)
 	};
 	
+	if (CGSizeEqualToSize(_cachedScaledSize, scaledSize)) {
+		return;
+	} else {
+		_cachedScaledSize = scaledSize;
+	}
+	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	
 	CGContextRef effectInContext = CGBitmapContextCreate(NULL, scaledSize.width, scaledSize.height, 8, scaledSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
@@ -139,8 +147,11 @@
 	vImage_Buffer effectOutBuffer = _effectOutBuffer;
 	
 	self.hidden = YES;
+	if (!self.superview) {
+        return;
+    }
 	[self.superview.layer renderInContext:effectInContext];
-	self.hidden = NO;
+    self.hidden = NO;
 	
 	uint32_t blurKernel = _precalculatedBlurKernel;
 	
