@@ -8,7 +8,7 @@
 
 + (instancetype) sharedInstance;
 
-@property (nonatomic, readonly, strong) NSMutableSet *subscribedViews;
+@property (nonatomic, readonly, assign) CFMutableSetRef subscribedViews;
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
 
