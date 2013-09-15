@@ -6,6 +6,9 @@
 @property (nonatomic, assign, readonly) CGContextRef effectInContext;
 @property (nonatomic, assign, readonly) CGContextRef effectOutContext;
 
+@property (nonatomic, assign, readonly) vImage_Buffer effectInBuffer;
+@property (nonatomic, assign, readonly) vImage_Buffer effectOutBuffer;
+
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 - (void) updatePrecalculatedBlurKernelWithBlurRadius:(CGFloat)blurRadius;
 
@@ -109,14 +112,6 @@
 		CGContextRelease(prevEffectOutContext);
 	}
 	_effectOutContext = effectOutContext;
-}
-
-- (void) refresh {
-	self.hidden = YES;
-	[self.superview.layer renderInContext:_effectInContext];
-	self.hidden = NO;
-	
-	CGContextRef effectInContext = _effectInContext;
 	
 	vImage_Buffer effectInBuffer = (vImage_Buffer){
 		.data = CGBitmapContextGetData(effectInContext),
@@ -125,7 +120,7 @@
 		.rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
 	};
 	
-	CGContextRef effectOutContext = _effectOutContext;
+	_effectInBuffer = effectInBuffer;
 	
 	vImage_Buffer effectOutBuffer = (vImage_Buffer){
 		.data = CGBitmapContextGetData(effectOutContext),
@@ -133,6 +128,19 @@
 		.height = CGBitmapContextGetHeight(effectOutContext),
 		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
 	};
+	
+	_effectOutBuffer = effectOutBuffer;
+}
+
+- (void) refresh {
+	CGContextRef effectInContext = _effectInContext;
+	CGContextRef effectOutContext = _effectOutContext;
+	vImage_Buffer effectInBuffer = _effectInBuffer;
+	vImage_Buffer effectOutBuffer = _effectOutBuffer;
+	
+	self.hidden = YES;
+	[self.superview.layer renderInContext:effectInContext];
+	self.hidden = NO;
 	
 	uint32_t blurKernel = _precalculatedBlurKernel;
 	
