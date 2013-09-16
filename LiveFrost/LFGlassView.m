@@ -43,7 +43,7 @@
 	self.layer.cornerRadius = 20.0f;
 	self.blurRadius = 4.0f;
 	self.scaleFactor = 0.25f;
-	self.backgroundColor = [UIColor redColor];
+	self.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.25f];
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
 	self.layer.actions = @{
@@ -77,7 +77,7 @@
 	CGSize scaledSize = [self scaledSize];
 	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
 		_bufferSize = scaledSize;
-        // NOTE: -refresh automatically takes place via CADisplayLink
+		[self setNeedsImageBuffersRecreation];
 	}
 }
 
@@ -120,11 +120,12 @@
 - (void) recreateImageBuffersIfNeeded {
 	if (_needsImageBuffersRecreation) {
 		[self recreateImageBuffers];
-		_needsImageBuffersRecreation = NO;
 	}
 }
 
 - (void) recreateImageBuffers {
+	_needsImageBuffersRecreation = NO;
+	
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
 	if (CGSizeEqualToSize(bufferSize, CGSizeZero)) {
