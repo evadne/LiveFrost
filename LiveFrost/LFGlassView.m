@@ -92,7 +92,7 @@
 - (void) setFrame:(CGRect)frame {
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
-	if (CGRectEqualToRect(fromFrame, self.frame)) {
+	if (!CGRectEqualToRect(fromFrame, self.frame)) {
 		[self setNeedsImageBuffersRecreation];
 	}
 }
@@ -100,7 +100,7 @@
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
-	if (CGRectEqualToRect(fromFrame, self.frame)) {
+	if (!CGRectEqualToRect(fromFrame, self.frame)) {
 		[self setNeedsImageBuffersRecreation];
 	}
 }
@@ -108,7 +108,7 @@
 - (void) setCenter:(CGPoint)center {
 	CGRect fromFrame = self.frame;
 	[super setCenter:center];
-	if (CGRectEqualToRect(fromFrame, self.frame)) {
+	if (!CGRectEqualToRect(fromFrame, self.frame)) {
 		[self setNeedsImageBuffersRecreation];
 	}
 }
