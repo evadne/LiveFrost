@@ -17,7 +17,11 @@
 @property (nonatomic, assign, readwrite) BOOL needsImageBuffersRecreation;
 
 - (void) updatePrecalculatedBlurKernel;
+- (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
+- (void) setNeedsImageBuffersRecreation;
+- (void) recreateImageBuffersIfNeeded;
 - (void) recreateImageBuffers;
+- (void) subscribeViewWithBounds:(CGRect)bounds;
 
 @end
 
@@ -92,23 +96,32 @@
 - (void) setFrame:(CGRect)frame {
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
-	if (!CGRectEqualToRect(fromFrame, self.frame)) {
-		[self setNeedsImageBuffersRecreation];
-	}
+	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+	[self subscribeViewWithBounds:frame];
 }
 
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
-	if (!CGRectEqualToRect(fromFrame, self.frame)) {
-		[self setNeedsImageBuffersRecreation];
-	}
+	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+	[self subscribeViewWithBounds:bounds];
 }
 
 - (void) setCenter:(CGPoint)center {
 	CGRect fromFrame = self.frame;
 	[super setCenter:center];
-	if (!CGRectEqualToRect(fromFrame, self.frame)) {
+	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+}
+
+- (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame {
+	if (CGRectEqualToRect(fromFrame, frame)) {
+		return;
+	}
+	
+	if (CGRectIsEmpty(fromFrame)) {
+		[self recreateImageBuffers];
+		[self refresh];
+	} else {
 		[self setNeedsImageBuffersRecreation];
 	}
 }
@@ -171,11 +184,23 @@
 	};
 }
 
+- (void) subscribeViewWithBounds:(CGRect)bounds {
+	if (!CGRectIsEmpty(bounds)) {
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	} else {
+		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
+	}
+}
+
 - (void) didMoveToSuperview {
 	[super didMoveToSuperview];
-	[self recreateImageBuffers];
-	[self refresh];
-	[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	
+	if (!CGRectIsEmpty(self.bounds)) {
+		[self recreateImageBuffers];
+		[self refresh];
+	}
+	
+	[self subscribeViewWithBounds:self.bounds];
 }
 
 - (void) refresh {
