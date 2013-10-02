@@ -118,7 +118,7 @@
 		return;
 	}
 	
-	if (CGRectIsEmpty(fromFrame)) {
+	if (CGRectIsEmpty(fromFrame) && !CGRectIsEmpty(frame)) {
 		[self recreateImageBuffers];
 		[self refresh];
 	} else {
