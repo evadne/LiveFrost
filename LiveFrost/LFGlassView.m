@@ -28,6 +28,13 @@
 @implementation LFGlassView
 @dynamic scaledSize;
 
+- (id) init {
+	if (self = [super init]) {
+		[self setup];
+	}
+	return self;
+}
+
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
 		[self setup];
