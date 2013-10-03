@@ -185,7 +185,7 @@
 }
 
 - (void) subscribeViewWithBounds:(CGRect)bounds {
-	if (!CGRectIsEmpty(bounds)) {
+	if (!CGRectIsEmpty(bounds) && self.superview) {
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 	} else {
 		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
@@ -198,18 +198,19 @@
 	if (!CGRectIsEmpty(self.bounds)) {
 		[self recreateImageBuffers];
 		[self refresh];
-	}
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	}	
+}
+
+- (void) removeFromSuperview {
+	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
 	
-	[self subscribeViewWithBounds:self.bounds];
+	[super removeFromSuperview];
 }
 
 - (void) refresh {
-	if (!self.superview) {
-		return;
-	}
-	
 	[self recreateImageBuffersIfNeeded];
-		
+	
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
 	vImage_Buffer effectInBuffer = _effectInBuffer;
