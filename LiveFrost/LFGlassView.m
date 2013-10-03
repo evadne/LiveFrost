@@ -84,7 +84,7 @@
 	CGSize scaledSize = [self scaledSize];
 	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
 		_bufferSize = scaledSize;
-		[self setNeedsImageBuffersRecreation];
+		[self recreateImageBuffers];
 	}
 }
 
