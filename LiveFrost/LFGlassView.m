@@ -188,7 +188,7 @@
 		[self recreateImageBuffers];
 		[self refresh];
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	}	
+	}
 }
 
 - (void) removeFromSuperview {
@@ -197,7 +197,13 @@
 	[super removeFromSuperview];
 }
 
-- (void) refresh {	
+- (void) refresh {
+#ifdef DEBUG
+    NSParameterAssert(self.superview);
+    NSParameterAssert(_effectInContext);
+    NSParameterAssert(_effectOutContext);
+#endif
+	
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
 	vImage_Buffer effectInBuffer = _effectInBuffer;
