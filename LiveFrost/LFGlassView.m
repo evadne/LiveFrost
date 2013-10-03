@@ -184,7 +184,7 @@
 - (void) didMoveToSuperview {
 	[super didMoveToSuperview];
 	
-	if (!CGRectIsEmpty(self.bounds)) {
+	if (!CGRectIsEmpty(self.bounds) && self.superview) {
 		[self recreateImageBuffers];
 		[self refresh];
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
