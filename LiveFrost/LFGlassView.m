@@ -14,12 +14,8 @@
 
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 
-@property (nonatomic, assign, readwrite) BOOL needsImageBuffersRecreation;
-
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
-- (void) setNeedsImageBuffersRecreation;
-- (void) recreateImageBuffersIfNeeded;
 - (void) recreateImageBuffers;
 - (void) subscribeViewWithBounds:(CGRect)bounds;
 
@@ -125,27 +121,13 @@
 		return;
 	}
 	
-	if (CGRectIsEmpty(fromFrame) && !CGRectIsEmpty(frame)) {
+	if (!CGRectIsEmpty(frame) && self.superview) {
 		[self recreateImageBuffers];
 		[self refresh];
-	} else {
-		[self setNeedsImageBuffersRecreation];
 	}
 }
 
-- (void) setNeedsImageBuffersRecreation {
-	_needsImageBuffersRecreation = YES;
-}
-
-- (void) recreateImageBuffersIfNeeded {
-	if (_needsImageBuffersRecreation) {
-		[self recreateImageBuffers];
-	}
-}
-
-- (void) recreateImageBuffers {
-	_needsImageBuffersRecreation = NO;
-	
+- (void) recreateImageBuffers {	
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
 	if (CGSizeEqualToSize(bufferSize, CGSizeZero)) {
@@ -215,9 +197,7 @@
 	[super removeFromSuperview];
 }
 
-- (void) refresh {
-	[self recreateImageBuffersIfNeeded];
-	
+- (void) refresh {	
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
 	vImage_Buffer effectInBuffer = _effectInBuffer;
