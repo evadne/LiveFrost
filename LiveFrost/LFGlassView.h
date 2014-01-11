@@ -6,4 +6,6 @@
 @property (nonatomic, assign) CGFloat blurRadius;
 @property (nonatomic, assign) CGFloat scaleFactor;
 
+@property (nonatomic, assign, getter=isLiveBlurring) BOOL liveBlurring;
+
 @end

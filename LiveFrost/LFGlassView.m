@@ -14,15 +14,21 @@
 
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 
+@property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
+
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
-- (void) subscribeViewWithBounds:(CGRect)bounds;
+- (void) subscribeView;
+- (void) startLiveBlurring;
+- (void) stopLiveBlurring;
+- (BOOL) isReadyToLiveBlur;
 
 @end
 
 @implementation LFGlassView
 @dynamic scaledSize;
+@dynamic liveBlurring;
 
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
@@ -49,6 +55,7 @@
 	self.layer.actions = @{
 		@"contents": [NSNull null]
 	};
+	_shouldLiveBlur = YES;
 }
 
 - (void) dealloc {
@@ -93,14 +100,14 @@
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
 	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
-	[self subscribeViewWithBounds:frame];
+	[self subscribeView];
 }
 
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
 	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
-	[self subscribeViewWithBounds:bounds];
+	[self subscribeView];
 }
 
 - (void) setCenter:(CGPoint)center {
@@ -114,10 +121,70 @@
 		return;
 	}
 	
-	if (!CGRectIsEmpty(frame) && self.superview) {
+	if ([self isReadyToLiveBlur]) {
 		[self recreateImageBuffers];
 		[self refresh];
 	}
+}
+
+- (void) subscribeView {
+	if ([self isReadyToLiveBlur]) {
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	} else {
+		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
+	}
+}
+
+- (void) didMoveToSuperview {
+	[super didMoveToSuperview];
+	
+	if ([self isReadyToLiveBlur]) {
+		[self recreateImageBuffers];
+		[self refresh];
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	}
+}
+
+- (void) removeFromSuperview {
+	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
+	
+	[super removeFromSuperview];
+}
+
+- (BOOL) isLiveBlurring {
+	return _shouldLiveBlur;
+}
+
+- (void) setLiveBlurring:(BOOL)liveBlurring {
+	if (liveBlurring == _shouldLiveBlur) {
+		return;
+	}
+	
+	if (liveBlurring) {
+		[self startLiveBlurring];
+	} else {
+		[self stopLiveBlurring];
+	}	
+}
+
+- (void) startLiveBlurring {
+	_shouldLiveBlur = YES;
+	
+	if ([self isReadyToLiveBlur]) {
+		[self recreateImageBuffers];
+		[self refresh];
+		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
+	}
+}
+
+- (void) stopLiveBlurring {
+	_shouldLiveBlur = NO;
+	
+	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
+}
+
+- (BOOL) isReadyToLiveBlur {
+	return (!CGRectIsEmpty(self.bounds) && self.superview && _shouldLiveBlur);
 }
 
 - (void) recreateImageBuffers {	
@@ -166,35 +233,11 @@
 	};
 }
 
-- (void) subscribeViewWithBounds:(CGRect)bounds {
-	if (!CGRectIsEmpty(bounds) && self.superview) {
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	} else {
-		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
-	}
-}
-
-- (void) didMoveToSuperview {
-	[super didMoveToSuperview];
-	
-	if (!CGRectIsEmpty(self.bounds) && self.superview) {
-		[self recreateImageBuffers];
-		[self refresh];
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	}
-}
-
-- (void) removeFromSuperview {
-	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
-	
-	[super removeFromSuperview];
-}
-
 - (void) refresh {
 #ifdef DEBUG
-    NSParameterAssert(self.superview);
-    NSParameterAssert(_effectInContext);
-    NSParameterAssert(_effectOutContext);
+	NSParameterAssert(self.superview);
+	NSParameterAssert(_effectInContext);
+	NSParameterAssert(_effectOutContext);
 #endif
 	
 	CGContextRef effectInContext = _effectInContext;
