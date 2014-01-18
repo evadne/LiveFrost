@@ -191,7 +191,7 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && _shouldLiveBlur);
 }
 
-- (void) setFrameInterval:(uint_fast32_t)frameInterval {
+- (void) setFrameInterval:(NSUInteger)frameInterval {
 	if (frameInterval == _frameInterval) {
 		return;
 	}
