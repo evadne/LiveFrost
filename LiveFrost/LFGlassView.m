@@ -16,6 +16,8 @@
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 
+@property (nonatomic, assign, readonly) uint_fast32_t currentFrameInterval;
+
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
@@ -56,6 +58,8 @@
 		@"contents": [NSNull null]
 	};
 	_shouldLiveBlur = YES;
+	_frameInterval = 1;
+	_currentFrameInterval = 0;
 }
 
 - (void) dealloc {
@@ -187,6 +191,19 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && _shouldLiveBlur);
 }
 
+- (void) setFrameInterval:(uint_fast32_t)frameInterval {
+	if (frameInterval == _frameInterval) {
+		return;
+	}
+	
+	if (frameInterval == 0) {
+		NSLog(@"warning: attempted to set frameInterval to 0; frameInterval must be 1 or greater");
+		return;
+	}
+	
+	_frameInterval = frameInterval;
+}
+
 - (void) recreateImageBuffers {	
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
@@ -234,6 +251,11 @@
 }
 
 - (void) refresh {
+	if (++_currentFrameInterval < _frameInterval) {
+		return;
+	}
+	_currentFrameInterval = 0;
+	
 #ifdef DEBUG
 	NSParameterAssert(self.superview);
 	NSParameterAssert(_effectInContext);
