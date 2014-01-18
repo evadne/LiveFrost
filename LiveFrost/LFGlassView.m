@@ -16,7 +16,7 @@
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 
-@property (nonatomic, assign, readonly) uint_fast32_t currentFrameInterval;
+@property (nonatomic, assign, readonly) NSUInteger currentFrameInterval;
 
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;

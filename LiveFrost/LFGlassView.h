@@ -8,6 +8,6 @@
 
 @property (nonatomic, assign, getter=isLiveBlurring) BOOL liveBlurring;
 
-@property (nonatomic, assign) uint_fast32_t frameInterval;
+@property (nonatomic, assign) NSUInteger frameInterval;
 
 @end
