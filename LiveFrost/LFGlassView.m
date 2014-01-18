@@ -262,13 +262,18 @@
 	NSParameterAssert(_effectOutContext);
 #endif
 	
+	CALayer *superViewLayer = self.superview.layer;
+	if (!superViewLayer.superlayer) {
+		return;
+	}
+	
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
 	vImage_Buffer effectInBuffer = _effectInBuffer;
 	vImage_Buffer effectOutBuffer = _effectOutBuffer;
 	
 	self.hidden = YES;
-	[self.superview.layer renderInContext:effectInContext];
+	[superViewLayer renderInContext:effectInContext];
 	self.hidden = NO;
 	
 	uint32_t blurKernel = _precalculatedBlurKernel;
