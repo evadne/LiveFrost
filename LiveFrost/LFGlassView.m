@@ -256,14 +256,13 @@
 	}
 	_currentFrameInterval = 0;
 	
+	UIView *superview = self.superview;
 #ifdef DEBUG
-	NSParameterAssert(self.superview);
+	NSParameterAssert(superview);
 	NSParameterAssert(_effectInContext);
 	NSParameterAssert(_effectOutContext);
 #endif
-	
-	CALayer *superViewLayer = self.superview.layer;
-	if (!superViewLayer.superlayer) {
+	if (!superview.window) {
 		return;
 	}
 	
@@ -273,7 +272,7 @@
 	vImage_Buffer effectOutBuffer = _effectOutBuffer;
 	
 	self.hidden = YES;
-	[superViewLayer renderInContext:effectInContext];
+	[superview.layer renderInContext:effectInContext];
 	self.hidden = NO;
 	
 	uint32_t blurKernel = _precalculatedBlurKernel;
