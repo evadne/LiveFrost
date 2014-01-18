@@ -22,7 +22,7 @@
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
 - (void) subscribeView;
-- (void) startLiveBlurring;
+- (void) startLiveBlurringIfReady;
 - (void) stopLiveBlurring;
 - (BOOL) isReadyToLiveBlur;
 
@@ -55,8 +55,8 @@
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
 	self.layer.actions = @{
-		@"contents": [NSNull null]
-	};
+                           @"contents": [NSNull null]
+                           };
 	_shouldLiveBlur = YES;
 	_frameInterval = 1;
 	_currentFrameInterval = 0;
@@ -141,18 +141,17 @@
 
 - (void) didMoveToSuperview {
 	[super didMoveToSuperview];
-	
-	if ([self isReadyToLiveBlur]) {
-		[self recreateImageBuffers];
-		[self refresh];
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	}
+	[self startLiveBlurringIfReady];
 }
 
 - (void) removeFromSuperview {
-	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
-	
+    [self stopLiveBlurring];
 	[super removeFromSuperview];
+}
+
+- (void) didMoveToWindow {
+    [super didMoveToWindow];
+	[self startLiveBlurringIfReady];
 }
 
 - (BOOL) isLiveBlurring {
@@ -165,15 +164,15 @@
 	}
 	
 	if (liveBlurring) {
-		[self startLiveBlurring];
+        _shouldLiveBlur = YES;
+		[self startLiveBlurringIfReady];
 	} else {
+        _shouldLiveBlur = NO;
 		[self stopLiveBlurring];
-	}	
+	}
 }
 
-- (void) startLiveBlurring {
-	_shouldLiveBlur = YES;
-	
+- (void) startLiveBlurringIfReady {
 	if ([self isReadyToLiveBlur]) {
 		[self recreateImageBuffers];
 		[self refresh];
@@ -182,13 +181,11 @@
 }
 
 - (void) stopLiveBlurring {
-	_shouldLiveBlur = NO;
-	
 	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
 }
 
 - (BOOL) isReadyToLiveBlur {
-	return (!CGRectIsEmpty(self.bounds) && self.superview && _shouldLiveBlur);
+	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
 }
 
 - (void) setFrameInterval:(NSUInteger)frameInterval {
@@ -204,7 +201,7 @@
 	_frameInterval = frameInterval;
 }
 
-- (void) recreateImageBuffers {	
+- (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
 	if (CGSizeEqualToSize(bufferSize, CGSizeZero)) {
@@ -262,9 +259,6 @@
 	NSParameterAssert(_effectInContext);
 	NSParameterAssert(_effectOutContext);
 #endif
-	if (!superview.window) {
-		return;
-	}
 	
 	CGContextRef effectInContext = _effectInContext;
 	CGContextRef effectOutContext = _effectOutContext;
