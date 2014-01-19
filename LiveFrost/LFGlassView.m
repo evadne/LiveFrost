@@ -151,7 +151,11 @@
 
 - (void) didMoveToWindow {
 	[super didMoveToWindow];
-	[self startLiveBlurringIfReady];
+	if (self.window) {
+		[self startLiveBlurringIfReady];
+	} else {
+		[self stopLiveBlurring];
+	}
 }
 
 - (BOOL) isLiveBlurring {
