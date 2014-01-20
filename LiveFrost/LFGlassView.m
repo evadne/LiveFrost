@@ -192,7 +192,7 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
 }
 
-- (void) blurIfPossible {
+- (void) blurOnceIfPossible {
 	if (!CGRectIsEmpty(self.bounds) && self.superview && self.window) {
 		[self recreateImageBuffers];
 		[self refresh];

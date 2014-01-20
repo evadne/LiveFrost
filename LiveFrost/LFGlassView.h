@@ -10,6 +10,6 @@
 
 @property (nonatomic, assign, getter=isLiveBlurring) BOOL liveBlurring;
 
-- (void) blurIfPossible;
+- (void) blurOnceIfPossible;
 
 @end
