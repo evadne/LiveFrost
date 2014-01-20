@@ -192,6 +192,13 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
 }
 
+- (void) blurIfPossible {
+	if (CGRectIsEmpty(self.bounds) && self.superview && self.window) {
+		[self recreateImageBuffers];
+		[self refresh];
+	}
+}
+
 - (void) setFrameInterval:(NSUInteger)frameInterval {
 	if (frameInterval == _frameInterval) {
 		return;

@@ -10,4 +10,6 @@
 
 @property (nonatomic, assign) NSUInteger frameInterval;
 
+- (void) blurIfPossible;
+
 @end
