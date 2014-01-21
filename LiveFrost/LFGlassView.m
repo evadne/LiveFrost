@@ -201,7 +201,7 @@
 - (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
-	if (CGSizeEqualToSize(bufferSize, CGSizeZero)) {
+	if (bufferSize.width == 0 || bufferSize.height == 0) {
 		return;
 	}
 	
