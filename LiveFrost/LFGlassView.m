@@ -196,7 +196,7 @@
 }
 
 - (void) blurOnceIfPossible {
-	if (!CGRectIsEmpty(self.bounds) && self.superview && self.window) {
+	if (!CGRectIsEmpty(self.bounds) && self.superview && self.window && self.layer.presentationLayer) {
 		[self recreateImageBuffers];
 		[self refresh];
 	}
