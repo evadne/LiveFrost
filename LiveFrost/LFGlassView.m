@@ -174,9 +174,12 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
 }
 
-- (void) blurOnceIfPossible {
+- (BOOL) blurOnceIfPossible {
 	if (!CGRectIsEmpty(self.bounds) && self.layer.presentationLayer) {
 		[self refresh];
+		return YES;
+	} else {
+		return NO;
 	}
 }
 
