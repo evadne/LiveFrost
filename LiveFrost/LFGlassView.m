@@ -68,7 +68,7 @@
 	if (_effectOutContext) {
 		CGContextRelease(_effectOutContext);
 	}
-	[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
+	[self stopLiveBlurring];
 }
 
 - (void) setBlurRadius:(CGFloat)blurRadius {
@@ -124,11 +124,12 @@
 	
 	if (!CGRectIsEmpty(self.bounds)) {
 		[self recreateImageBuffers];
+	} else {
+		[self stopLiveBlurring];
+		return;
 	}
 	
-	if ([self isReadyToLiveBlur]) {
-		[self refresh];
-	}
+	[self startLiveBlurringIfReady];
 }
 
 - (void) didMoveToWindow {
