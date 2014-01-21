@@ -19,7 +19,7 @@
 @property (nonatomic, assign, readonly) NSUInteger currentFrameInterval;
 
 - (void) updatePrecalculatedBlurKernel;
-- (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
+- (void) adjustImageBuffersFromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
 - (void) startLiveBlurringIfReady;
 - (void) stopLiveBlurring;
@@ -102,23 +102,23 @@
 - (void) setFrame:(CGRect)frame {
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
-	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+	[self adjustImageBuffersFromFrame:fromFrame];
 }
 
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
-	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+	[self adjustImageBuffersFromFrame:fromFrame];
 }
 
 - (void) setCenter:(CGPoint)center {
 	CGRect fromFrame = self.frame;
 	[super setCenter:center];
-	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
+	[self adjustImageBuffersFromFrame:fromFrame];
 }
 
-- (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame {
-	if (CGRectEqualToRect(fromFrame, frame)) {
+- (void) adjustImageBuffersFromFrame:(CGRect)fromFrame {
+	if (CGRectEqualToRect(fromFrame, self.frame)) {
 		return;
 	}
 	
