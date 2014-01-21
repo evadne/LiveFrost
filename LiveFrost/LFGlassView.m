@@ -21,7 +21,6 @@
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersForFrame:(CGRect)frame fromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
-- (void) subscribeView;
 - (void) startLiveBlurringIfReady;
 - (void) stopLiveBlurring;
 - (BOOL) isReadyToLiveBlur;
@@ -104,14 +103,12 @@
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
 	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
-	[self subscribeView];
 }
 
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
 	[self adjustImageBuffersForFrame:self.frame fromFrame:fromFrame];
-	[self subscribeView];
 }
 
 - (void) setCenter:(CGPoint)center {
@@ -131,14 +128,6 @@
 	
 	if ([self isReadyToLiveBlur]) {
 		[self refresh];
-	}
-}
-
-- (void) subscribeView {
-	if ([self isReadyToLiveBlur]) {
-		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
-	} else {
-		[[LFDisplayBridge sharedInstance] removeSubscribedViewsObject:self];
 	}
 }
 
