@@ -156,6 +156,11 @@
 	}
 }
 
+- (void) layoutSubviews {
+	[super layoutSubviews];
+	[self startLiveBlurringIfReady];
+}
+
 - (BOOL) isLiveBlurring {
 	return _shouldLiveBlur;
 }
