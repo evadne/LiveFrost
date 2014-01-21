@@ -142,21 +142,13 @@
 	}
 }
 
-- (void) didMoveToSuperview {
-	[super didMoveToSuperview];
-	[self startLiveBlurringIfReady];
-}
-
 - (void) didMoveToWindow {
 	[super didMoveToWindow];
-	if (self.window == nil) {
+	if (self.window) {
+		[self startLiveBlurringIfReady];
+	} else {
 		[self stopLiveBlurring];
 	}
-}
-
-- (void) layoutSubviews {
-	[super layoutSubviews];
-	[self startLiveBlurringIfReady];
 }
 
 - (BOOL) isLiveBlurring {
@@ -266,12 +258,13 @@
 	UIView *superview = self.superview;
 #ifdef DEBUG
 	NSParameterAssert(superview);
+	NSParameterAssert(self.window);
 	NSParameterAssert(_effectInContext);
 	NSParameterAssert(_effectOutContext);
 #endif
 	
-	CGContextRef effectInContext = _effectInContext;
-	CGContextRef effectOutContext = _effectOutContext;
+	CGContextRef effectInContext = CGContextRetain(_effectInContext);
+	CGContextRef effectOutContext = CGContextRetain(_effectOutContext);
 	vImage_Buffer effectInBuffer = _effectInBuffer;
 	vImage_Buffer effectOutBuffer = _effectOutBuffer;
 	
@@ -288,6 +281,9 @@
 	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
 	self.layer.contents = (__bridge id)(outImage);
 	CGImageRelease(outImage);
+    
+	CGContextRelease(effectInContext);
+	CGContextRelease(effectOutContext);
 }
 
 @end
