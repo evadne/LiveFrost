@@ -144,11 +144,6 @@
 	[self startLiveBlurringIfReady];
 }
 
-- (void) removeFromSuperview {
-	[self stopLiveBlurring];
-	[super removeFromSuperview];
-}
-
 - (void) didMoveToWindow {
 	[super didMoveToWindow];
 	if (self.window == nil) {
