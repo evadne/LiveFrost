@@ -125,8 +125,11 @@
 		return;
 	}
 	
-	if ([self isReadyToLiveBlur]) {
+	if (!CGRectIsEmpty(self.bounds)) {
 		[self recreateImageBuffers];
+	}
+	
+	if ([self isReadyToLiveBlur]) {
 		[self refresh];
 	}
 }
@@ -176,7 +179,6 @@
 
 - (void) startLiveBlurringIfReady {
 	if ([self isReadyToLiveBlur]) {
-		[self recreateImageBuffers];
 		[self refresh];
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 	}
@@ -192,7 +194,6 @@
 
 - (void) blurOnceIfPossible {
 	if (!CGRectIsEmpty(self.bounds) && self.layer.presentationLayer) {
-		[self recreateImageBuffers];
 		[self refresh];
 	}
 }
