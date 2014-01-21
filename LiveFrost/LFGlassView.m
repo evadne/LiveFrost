@@ -161,6 +161,7 @@
 
 - (void) startLiveBlurringIfReady {
 	if ([self isReadyToLiveBlur]) {
+		_currentFrameInterval = 0;
 		[self refresh];
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 	}
@@ -176,6 +177,7 @@
 
 - (BOOL) blurOnceIfPossible {
 	if (!CGRectIsEmpty(self.bounds) && self.layer.presentationLayer) {
+		_currentFrameInterval = 0;
 		[self refresh];
 		return YES;
 	} else {
