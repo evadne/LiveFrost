@@ -46,6 +46,7 @@
 - (void) startLiveBlurringIfReady;
 - (void) stopLiveBlurring;
 - (BOOL) isReadyToLiveBlur;
+- (void) forceRefresh;
 
 @end
 
@@ -182,8 +183,7 @@
 
 - (void) startLiveBlurringIfReady {
 	if ([self isReadyToLiveBlur]) {
-		_currentFrameInterval = _frameInterval - 1;
-		[self refresh];
+		[self forceRefresh];
 		[[LFDisplayBridge sharedInstance] addSubscribedViewsObject:self];
 	}
 }
@@ -198,8 +198,7 @@
 
 - (BOOL) blurOnceIfPossible {
 	if (!CGRectIsEmpty(self.bounds) && self.layer.presentationLayer) {
-		_currentFrameInterval = _frameInterval - 1;
-		[self refresh];
+		[self forceRefresh];
 		return YES;
 	} else {
 		return NO;
@@ -263,6 +262,11 @@
 		.height = CGBitmapContextGetHeight(effectOutContext),
 		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
 	};
+}
+
+- (void) forceRefresh {
+	_currentFrameInterval = _frameInterval - 1;
+	[self refresh];
 }
 
 - (void) refresh {
