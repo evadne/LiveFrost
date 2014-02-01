@@ -25,7 +25,7 @@
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
-@property (nonatomic, assign, readonly) CGSize bufferSize;
+@property (nonatomic, assign, readonly) CGSize cachedBufferSize;
 @property (nonatomic, assign, readonly) CGSize scaledSize;
 
 @property (nonatomic, assign, readonly) CGContextRef effectInContext;
@@ -106,17 +106,17 @@
 
 - (void) setScaleFactor:(CGFloat)scaleFactor {
 	_scaleFactor = scaleFactor;
-	CGSize scaledSize = [self scaledSize];
-	if (!CGSizeEqualToSize(_bufferSize, scaledSize)) {
-		_bufferSize = scaledSize;
+	CGSize scaledSize = self.scaledSize;
+	if (!CGSizeEqualToSize(_cachedBufferSize, scaledSize)) {
+		_cachedBufferSize = scaledSize;
 		[self recreateImageBuffers];
 	}
 }
 
 - (CGSize) scaledSize {
 	CGSize scaledSize = (CGSize){
-		ceil(_scaleFactor * CGRectGetWidth(self.bounds)),
-		ceil(_scaleFactor * CGRectGetHeight(self.bounds))
+		rint(_scaleFactor * CGRectGetWidth(self.bounds)),
+		rint(_scaleFactor * CGRectGetHeight(self.bounds))
 	};
 	return scaledSize;
 }
@@ -221,20 +221,24 @@
 - (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
-	if (bufferSize.width == 0 || bufferSize.height == 0) {
+	
+	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
 		return;
 	}
 	
+	size_t bufferWidth = (size_t)bufferSize.width;
+	size_t bufferHeight = (size_t)bufferSize.height;
+	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	
-	CGContextRef effectInContext = CGBitmapContextCreate(NULL, bufferSize.width, bufferSize.height, 8, bufferSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CGContextRef effectInContext = CGBitmapContextCreate(NULL, bufferWidth, bufferHeight, 8, bufferWidth * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	
-	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, bufferSize.width, bufferSize.height, 8, bufferSize.width * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, bufferWidth, bufferHeight, 8, bufferWidth * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	
 	CGColorSpaceRelease(colorSpace);
 	
 	CGContextConcatCTM(effectInContext, (CGAffineTransform){
-		1, 0, 0, -1, 0, bufferSize.height
+		1.0, 0.0, 0.0, -1.0, 0.0, bufferSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
 	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
