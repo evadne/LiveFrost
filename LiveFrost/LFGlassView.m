@@ -214,7 +214,6 @@
 	if (frameInterval == _frameInterval) {
 		return;
 	}
-	
 	if (frameInterval == 0) {
 		NSLog(@"warning: attempted to set frameInterval to 0; frameInterval must be 1 or greater");
 		return;
@@ -226,14 +225,12 @@
 - (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
-
 	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
 		return;
 	}
 	
 	size_t bufferWidth = (size_t)rint(bufferSize.width);
 	size_t bufferHeight = (size_t)rint(bufferSize.height);
-	
 	if (bufferWidth == 0) {
 		bufferWidth = 1;
 	}
