@@ -154,6 +154,11 @@
 	[self startLiveBlurringIfReady];
 }
 
+- (void) didMoveToSuperview {
+	[super didMoveToSuperview];
+	[self startLiveBlurringIfReady];
+}
+
 - (void) didMoveToWindow {
 	[super didMoveToWindow];
 	if (self.window) {
