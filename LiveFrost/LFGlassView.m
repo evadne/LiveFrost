@@ -115,8 +115,8 @@
 
 - (CGSize) scaledSize {
 	CGSize scaledSize = (CGSize){
-		_scaleFactor * CGRectGetWidth(self.bounds),
-		_scaleFactor * CGRectGetHeight(self.bounds)
+		ceil(_scaleFactor * CGRectGetWidth(self.bounds)),
+		ceil(_scaleFactor * CGRectGetHeight(self.bounds))
 	};
 	return scaledSize;
 }
