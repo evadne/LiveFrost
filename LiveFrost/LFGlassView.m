@@ -115,8 +115,8 @@
 
 - (CGSize) scaledSize {
 	CGSize scaledSize = (CGSize){
-		rint(_scaleFactor * CGRectGetWidth(self.bounds)),
-		rint(_scaleFactor * CGRectGetHeight(self.bounds))
+		_scaleFactor * CGRectGetWidth(self.bounds),
+		_scaleFactor * CGRectGetHeight(self.bounds)
 	};
 	return scaledSize;
 }
@@ -226,13 +226,20 @@
 - (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
-	
+
 	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
 		return;
 	}
 	
-	size_t bufferWidth = (size_t)bufferSize.width;
-	size_t bufferHeight = (size_t)bufferSize.height;
+	size_t bufferWidth = (size_t)rint(bufferSize.width);
+	size_t bufferHeight = (size_t)rint(bufferSize.height);
+	
+	if (bufferWidth == 0) {
+		bufferWidth = 1;
+	}
+	if (bufferHeight == 0) {
+		bufferHeight = 1;
+	}
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	
