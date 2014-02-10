@@ -74,7 +74,7 @@
 	self.scaleFactor = 0.25f;
 	self.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.25f];
 	self.opaque = NO;
-	self.ignoreTouches = YES;
+	_ignoreTouches = YES;
 	self.layer.actions = @{
 		@"contents": [NSNull null]
 	};
