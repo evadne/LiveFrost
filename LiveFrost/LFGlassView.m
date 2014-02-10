@@ -74,7 +74,7 @@
 	self.scaleFactor = 0.25f;
 	self.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.25f];
 	self.opaque = NO;
-	self.userInteractionEnabled = NO;
+	self.ignoreTouches = YES;
 	self.layer.actions = @{
 		@"contents": [NSNull null]
 	};
@@ -314,9 +314,18 @@
 	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
 	self.layer.contents = (__bridge id)(outImage);
 	CGImageRelease(outImage);
-    
+	
 	CGContextRelease(effectInContext);
 	CGContextRelease(effectOutContext);
+}
+
+- (id) hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+	id hitView = [super hitTest:point withEvent:event];
+	if (hitView == self && self.ignoreTouches) {
+		return nil;
+	} else {
+		return hitView;
+	}
 }
 
 @end
