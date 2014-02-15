@@ -321,7 +321,7 @@
 
 - (id) hitTest:(CGPoint)point withEvent:(UIEvent *)event {
 	id hitView = [super hitTest:point withEvent:event];
-	if (hitView == self && _ignoreTouches) {
+	if (hitView == self && self.ignoreTouches) {
 		return nil;
 	} else {
 		return hitView;
