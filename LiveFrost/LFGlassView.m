@@ -335,11 +335,6 @@
 	vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 	
-	CGContextSaveGState(effectOutContext);
-	CGContextSetFillColorWithColor(effectOutContext, self.backgroundColor.CGColor);
-	CGContextFillRect(effectOutContext, self.bounds);
-	CGContextRestoreGState(effectOutContext);
-	
 	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
 	self.layer.contents = (__bridge id)(outImage);
 	CGImageRelease(outImage);
