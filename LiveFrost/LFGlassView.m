@@ -148,6 +148,7 @@
 	if (enabled) {
 		if (!colorLayer) {
 			colorLayer = [CALayer layer];
+			colorLayer.backgroundColor = [self.backgroundColor CGColor];
 			[self.layer addSublayer:colorLayer];
 		}
 	}
