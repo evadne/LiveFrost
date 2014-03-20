@@ -139,6 +139,30 @@
 	[self adjustImageBuffersFromFrame:fromFrame];
 }
 
+- (void) setBackgroundColor:(UIColor *)color {
+	[super setBackgroundColor:color];
+	colorLayer.backgroundColor = [color CGColor];
+}
+
+- (void) setBackgroundColorEnabled:(BOOL)enabled {
+	if (enabled) {
+		if (!colorLayer) {
+			colorLayer = [CALayer layer];
+			[self.layer addSublayer:colorLayer];
+		}
+	}
+	else {
+		if (colorLayer) {
+			[colorLayer removeFromSuperlayer];
+			colorLayer = nil;
+		}
+	}
+}
+
+- (BOOL) backgroundColorEnabled {
+	return colorLayer!=nil;
+}
+
 - (void) adjustImageBuffersFromFrame:(CGRect)fromFrame {
 	if (CGRectEqualToRect(fromFrame, self.frame)) {
 		return;
@@ -322,6 +346,8 @@
     
 	CGContextRelease(effectInContext);
 	CGContextRelease(effectOutContext);
+	
+	colorLayer.frame = self.bounds;
 }
 
 @end
