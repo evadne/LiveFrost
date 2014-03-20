@@ -152,11 +152,9 @@
 			[self.layer addSublayer:colorLayer];
 		}
 	}
-	else {
-		if (colorLayer) {
-			[colorLayer removeFromSuperlayer];
-			colorLayer = nil;
-		}
+	else if (colorLayer) {
+		[colorLayer removeFromSuperlayer];
+		colorLayer = nil;
 	}
 }
 
