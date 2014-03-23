@@ -45,7 +45,7 @@
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 
 - (void) updatePrecalculatedBlurKernel;
-- (void) adjustImageBuffersFromFrame:(CGRect)fromFrame;
+- (void) adjustImageBuffersAndLayerFromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
 - (void) startLiveBlurringIfReady;
 - (void) stopLiveBlurring;
@@ -76,8 +76,8 @@
 	self.clipsToBounds = YES;
 	self.blurRadius = 4.0f;
 	_backgroundColorLayer = [CALayer layer];
-	self.scaleFactor = 0.25f;
 	self.backgroundColor = [UIColor clearColor];
+	self.scaleFactor = 0.25f;
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
 	self.layer.actions = @{
@@ -129,19 +129,19 @@
 - (void) setFrame:(CGRect)frame {
 	CGRect fromFrame = self.frame;
 	[super setFrame:frame];
-	[self adjustImageBuffersFromFrame:fromFrame];
+	[self adjustImageBuffersAndLayerFromFrame:fromFrame];
 }
 
 - (void) setBounds:(CGRect)bounds {
 	CGRect fromFrame = self.frame;
 	[super setBounds:bounds];
-	[self adjustImageBuffersFromFrame:fromFrame];
+	[self adjustImageBuffersAndLayerFromFrame:fromFrame];
 }
 
 - (void) setCenter:(CGPoint)center {
 	CGRect fromFrame = self.frame;
 	[super setCenter:center];
-	[self adjustImageBuffersFromFrame:fromFrame];
+	[self adjustImageBuffersAndLayerFromFrame:fromFrame];
 }
 
 - (void) setBackgroundColor:(UIColor *)color {
@@ -154,7 +154,7 @@
 	}
 }
 
-- (void) adjustImageBuffersFromFrame:(CGRect)fromFrame {
+- (void) adjustImageBuffersAndLayerFromFrame:(CGRect)fromFrame {
 	if (CGRectEqualToRect(fromFrame, self.frame)) {
 		return;
 	}
