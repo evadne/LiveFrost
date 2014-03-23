@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+// Contains contributions from Nam Kennic
+//
 
 #import "LFGlassView.h"
 #import "LFDisplayBridge.h"
@@ -39,6 +41,8 @@
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 
 @property (nonatomic, assign, readonly) NSUInteger currentFrameInterval;
+
+@property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersFromFrame:(CGRect)fromFrame;
@@ -71,13 +75,14 @@
 - (void) setup {
 	self.clipsToBounds = YES;
 	self.blurRadius = 4.0f;
+	_backgroundColorLayer = [CALayer layer];
 	self.scaleFactor = 0.25f;
-	self.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.25f];
+	self.backgroundColor = [UIColor clearColor];
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
 	self.layer.actions = @{
-		@"contents": [NSNull null]
-	};
+                           @"contents": [NSNull null]
+                           };
 	_shouldLiveBlur = YES;
 	_frameInterval = 1;
 	_currentFrameInterval = 0;
@@ -141,31 +146,20 @@
 
 - (void) setBackgroundColor:(UIColor *)color {
 	[super setBackgroundColor:color];
-	colorLayer.backgroundColor = [color CGColor];
-}
-
-- (void) setBackgroundColorEnabled:(BOOL)enabled {
-	if (enabled) {
-		if (!colorLayer) {
-			colorLayer = [CALayer layer];
-			colorLayer.backgroundColor = [self.backgroundColor CGColor];
-			[self.layer addSublayer:colorLayer];
-		}
+	if (CGColorGetAlpha([color CGColor])) {
+		_backgroundColorLayer.backgroundColor = [color CGColor];
+		[self.layer addSublayer:_backgroundColorLayer];
+	} else {
+		[_backgroundColorLayer removeFromSuperlayer];
 	}
-	else if (colorLayer) {
-		[colorLayer removeFromSuperlayer];
-		colorLayer = nil;
-	}
-}
-
-- (BOOL) backgroundColorEnabled {
-	return colorLayer!=nil;
 }
 
 - (void) adjustImageBuffersFromFrame:(CGRect)fromFrame {
 	if (CGRectEqualToRect(fromFrame, self.frame)) {
 		return;
 	}
+	
+	_backgroundColorLayer.frame = self.bounds;
 	
 	if (!CGRectIsEmpty(self.bounds)) {
 		[self recreateImageBuffers];
@@ -245,7 +239,7 @@
 	_frameInterval = frameInterval;
 }
 
-- (void) recreateImageBuffers {
+- (void) recreateImageBuffers {    
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
 	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
@@ -340,8 +334,6 @@
     
 	CGContextRelease(effectInContext);
 	CGContextRelease(effectOutContext);
-	
-	colorLayer.frame = self.bounds;
 }
 
 @end
