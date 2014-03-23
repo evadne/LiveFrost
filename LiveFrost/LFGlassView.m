@@ -81,8 +81,8 @@
 	self.opaque = NO;
 	self.userInteractionEnabled = NO;
 	self.layer.actions = @{
-                           @"contents": [NSNull null]
-                           };
+		@"contents": [NSNull null]
+	};
 	_shouldLiveBlur = YES;
 	_frameInterval = 1;
 	_currentFrameInterval = 0;
@@ -239,7 +239,7 @@
 	_frameInterval = frameInterval;
 }
 
-- (void) recreateImageBuffers {    
+- (void) recreateImageBuffers {
 	CGRect visibleRect = self.frame;
 	CGSize bufferSize = self.scaledSize;
 	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
