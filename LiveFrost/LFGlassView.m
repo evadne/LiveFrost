@@ -76,6 +76,9 @@
 	self.clipsToBounds = YES;
 	self.blurRadius = 4.0f;
 	_backgroundColorLayer = [CALayer layer];
+	_backgroundColorLayer.actions = @{
+		@"backgroundColor": [NSNull null]
+	};
 	self.backgroundColor = [UIColor clearColor];
 	self.scaleFactor = 0.25f;
 	self.opaque = NO;
@@ -147,10 +150,10 @@
 - (void) setBackgroundColor:(UIColor *)color {
 	[super setBackgroundColor:color];
 	
-	CGColorRef backgroundColor = [color CGColor];
-	_backgroundColorLayer.backgroundColor = backgroundColor;
+	CGColorRef backgroundCGColor = [color CGColor];
 	
-	if (CGColorGetAlpha(backgroundColor)) {
+	if (CGColorGetAlpha(backgroundCGColor)) {
+		_backgroundColorLayer.backgroundColor = backgroundCGColor;
 		[self.layer addSublayer:_backgroundColorLayer];
 	} else {
 		[_backgroundColorLayer removeFromSuperlayer];
