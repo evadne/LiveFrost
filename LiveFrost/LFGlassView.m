@@ -146,8 +146,11 @@
 
 - (void) setBackgroundColor:(UIColor *)color {
 	[super setBackgroundColor:color];
-	if (CGColorGetAlpha([color CGColor])) {
-		_backgroundColorLayer.backgroundColor = [color CGColor];
+	
+	CGColorRef backgroundColor = [color CGColor];
+	_backgroundColorLayer.backgroundColor = backgroundColor;
+	
+	if (CGColorGetAlpha(backgroundColor)) {
 		[self.layer addSublayer:_backgroundColorLayer];
 	} else {
 		[_backgroundColorLayer removeFromSuperlayer];
