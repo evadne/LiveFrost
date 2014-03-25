@@ -77,7 +77,9 @@
 	self.blurRadius = 4.0f;
 	_backgroundColorLayer = [CALayer layer];
 	_backgroundColorLayer.actions = @{
-		@"backgroundColor": [NSNull null]
+		@"backgroundColor": [NSNull null],
+		@"bounds": [NSNull null],
+		@"position": [NSNull null]
 	};
 	self.backgroundColor = [UIColor clearColor];
 	self.scaleFactor = 0.25f;
