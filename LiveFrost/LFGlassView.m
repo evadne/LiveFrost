@@ -156,7 +156,7 @@
 	
 	if (CGColorGetAlpha(backgroundCGColor)) {
 		_backgroundColorLayer.backgroundColor = backgroundCGColor;
-		[self.layer addSublayer:_backgroundColorLayer];
+		[self.layer insertSublayer:_backgroundColorLayer atIndex:0];
 	} else {
 		[_backgroundColorLayer removeFromSuperlayer];
 	}
