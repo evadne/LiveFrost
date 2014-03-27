@@ -54,6 +54,13 @@
 
 @end
 
+#if !__has_feature(objc_arc)
+	#error This implementation file must be compiled with Objective-C ARC.
+
+	#error Compile this file with the -fobjc-arc flag under your target's Build Phases,
+	#error   or convert your project to Objective-C ARC.
+#endif
+
 @implementation LFGlassView
 @dynamic scaledSize;
 @dynamic liveBlurring;
