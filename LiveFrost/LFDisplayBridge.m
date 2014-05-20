@@ -32,7 +32,7 @@ void LF_refreshAllSubscribedObjectsApplierFunction(const void *value, void *cont
 @end
 
 void LF_refreshAllSubscribedObjectsApplierFunction(const void *value, void *context) {
-	[(__bridge UIView<LFDisplayBridgeTriggering> *)value refresh];
+	[(__bridge id<LFDisplayBridgeTriggering>)value refresh];
 }
 
 #if !__has_feature(objc_arc)
