@@ -23,7 +23,7 @@
 //
 
 #import "LFGlassLayer.h"
-#include "LFDefines.h"
+#import "LFDefines.h"
 
 @interface LFGlassLayer ()
 
@@ -87,6 +87,11 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 		[CATransaction commit];
 		_scaleFactor = originalLayer.scaleFactor;
 		_frameInterval = originalLayer.frameInterval;
+		_customBlurTargetLayer = originalLayer.customBlurTargetLayer;
+		_customBlurBounds = originalLayer.customBlurBounds;
+		_customBlurPosition = originalLayer.customBlurPosition;
+		_customBlurAnchorPoint = originalLayer.customBlurAnchorPoint;
+		_customBlurFrame = originalLayer.customBlurFrame;
 	}
 	return self;
 }
@@ -99,17 +104,16 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 }
 
 - (void) setup {
-	[CATransaction begin];
-	[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
-	self.blurRadius = 4.0f;
-	[self updatePrecalculatedBlurKernel];
-	[CATransaction commit];
-	
 	[self addObserver:self
 	       forKeyPath:@"blurRadius"
 	          options:0
 	          context:LFGlassLayerBlurRadiusObserverContext];
 	_blurRadiusObserverContext = LFGlassLayerBlurRadiusObserverContext;
+	
+	[CATransaction begin];
+	[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
+	self.blurRadius = 4.0f;
+	[CATransaction commit];
 	
 	_backgroundColorLayer = [CALayer layer];
 	_backgroundColorLayer.actions = @{
@@ -404,12 +408,11 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 
 - (id<CAAction>) actionForKey:(NSString *)event {
 	if ([event isEqualToString:@"blurRadius"]) {
-		NSLog(@"actionForKey: for a blur Radius was asked for and reached!");
-//		CABasicAnimation *blurAnimation = [CABasicAnimation animationWithKeyPath:event];
-//		blurAnimation.fromValue = [self.presentationLayer valueForKey:event];
-//		return blurAnimation;
 		
-		// TODO: Use a CATransaction instead of a CABasicAnimation to handle this. Consider copying the layer, then perform a fade transition to make things look good.
+		CATransition *blurAnimation = [CATransition animation];
+		blurAnimation.type = kCATransitionFade;
+		
+		return blurAnimation;
 	}
 	
 	return [super actionForKey:event];

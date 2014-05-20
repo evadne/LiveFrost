@@ -157,7 +157,7 @@
 	if ([self.glassLayer respondsToSelector:[anInvocation selector]]) {
 		[anInvocation invokeWithTarget:self.glassLayer];
 	} else {
-		return [super forwardInvocation:anInvocation];
+		[super forwardInvocation:anInvocation];
 	}
 }
 
