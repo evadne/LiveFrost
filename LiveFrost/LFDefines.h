@@ -20,6 +20,11 @@
 // THE SOFTWARE.
 //
 
+#ifndef LiveFrost_LFDefines_h
+#define LiveFrost_LFDefines_h
+
 #include <CoreGraphics/CGGeometry.h>
 
 extern const CGPoint LFPointNull;
+
+#endif
