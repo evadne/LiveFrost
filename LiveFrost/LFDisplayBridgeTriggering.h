@@ -20,14 +20,6 @@
 // THE SOFTWARE.
 //
 
-@import QuartzCore.CADisplayLink;
-#import "LFDisplayBridgeTriggering.h"
-
-@interface LFDisplayBridge : NSObject <LFDisplayBridgeTriggering>
-
-+ (instancetype) sharedInstance;
-
-- (void) addSubscribedObject:(id<LFDisplayBridgeTriggering>)object;
-- (void) removeSubscribedObject:(id<LFDisplayBridgeTriggering>)object;
-
+@protocol LFDisplayBridgeTriggering <NSObject>
+- (void) refresh;
 @end

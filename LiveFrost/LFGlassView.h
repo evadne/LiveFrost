@@ -20,9 +20,7 @@
 // THE SOFTWARE.
 //
 
-#import <Accelerate/Accelerate.h>
-#import <QuartzCore/QuartzCore.h>
-#import "LFGlassLayer.h"
+@class LFGlassLayer;
 
 @interface LFGlassView : UIView
 

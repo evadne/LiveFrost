@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2014 Evadne Wu and Nicholas Levin
+// Copyright (c) 2014 Evadne Wu and Nicholas Levin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,6 @@
 // THE SOFTWARE.
 //
 
-@import QuartzCore.CADisplayLink;
-#import "LFDisplayBridgeTriggering.h"
+#include <CoreGraphics/CGGeometry.h>
 
-@interface LFDisplayBridge : NSObject <LFDisplayBridgeTriggering>
-
-+ (instancetype) sharedInstance;
-
-- (void) addSubscribedObject:(id<LFDisplayBridgeTriggering>)object;
-- (void) removeSubscribedObject:(id<LFDisplayBridgeTriggering>)object;
-
-@end
+extern const CGPoint LFPointNull;

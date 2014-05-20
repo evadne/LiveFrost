@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   }
   s.source       = { :git => "https://github.com/radi/LiveFrost.git", :tag => "1.1.2" }
   s.platform     = :ios, '6.0'
-  s.source_files = 'LiveFrost', 'LiveFrost/**/*.{h,m}'
+  s.source_files = 'LiveFrost', 'LiveFrost/**/*.{h,m,c}'
   s.exclude_files = 'LiveFrost/Exclude'
   s.frameworks = 'Accelerate', 'QuartzCore', 'UIKit'
   s.requires_arc = true

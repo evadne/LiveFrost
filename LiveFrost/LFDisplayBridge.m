@@ -22,16 +22,16 @@
 
 #import "LFDisplayBridge.h"
 
-void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *context);
+void LF_refreshAllSubscribedObjectsApplierFunction(const void *value, void *context);
 
 @interface LFDisplayBridge ()
 
-@property (nonatomic, readwrite, assign) CFMutableSetRef subscribedLayers;
+@property (nonatomic, readwrite, assign) CFMutableSetRef subscribedObjects;
 @property (nonatomic, readonly, strong) CADisplayLink *displayLink;
 
 @end
 
-void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *context) {
+void LF_refreshAllSubscribedObjectsApplierFunction(const void *value, void *context) {
 	[(__bridge UIView<LFDisplayBridgeTriggering> *)value refresh];
 }
 
@@ -55,7 +55,7 @@ void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *conte
 
 - (id) init {
 	if (self = [super init]) {
-		_subscribedLayers = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
+		_subscribedObjects = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 		_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleDisplayLink:)];
 		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 	}
@@ -64,15 +64,15 @@ void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *conte
 
 - (void) dealloc {
 	[_displayLink invalidate];
-	CFRelease(_subscribedLayers);
+	CFRelease(_subscribedObjects);
 }
 
-- (void) addSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object {
-	CFSetAddValue(_subscribedLayers, (__bridge const void*)object);
+- (void) addSubscribedObject:(id<LFDisplayBridgeTriggering>)object {
+	CFSetAddValue(_subscribedObjects, (__bridge const void*)object);
 }
 
-- (void) removeSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object {
-	CFSetRemoveValue(_subscribedLayers, (__bridge const void*)object);
+- (void) removeSubscribedObject:(id<LFDisplayBridgeTriggering>)object {
+	CFSetRemoveValue(_subscribedObjects, (__bridge const void*)object);
 }
 
 - (void) handleDisplayLink:(CADisplayLink *)displayLink {
@@ -80,7 +80,7 @@ void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *conte
 }
 
 - (void) refresh {
-	CFSetApplyFunction(_subscribedLayers, LF_refreshAllSubscribedLayersApplierFunction, NULL);
+	CFSetApplyFunction(_subscribedObjects, LF_refreshAllSubscribedObjectsApplierFunction, NULL);
 }
 
 @end

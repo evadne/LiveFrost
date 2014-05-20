@@ -23,6 +23,7 @@
 //
 
 #import "LFGlassLayer.h"
+#include "LFDefines.h"
 
 @interface LFGlassLayer ()
 
@@ -41,7 +42,10 @@
 
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 
-- (void) setupLFGlassLayerInstance;
+@property (nonatomic, assign, readonly) void *blurRadiusObserverContext;
+
+- (void) setup;
+- (void) updatePrecalculatedBlurKernel;
 - (void) adjustLayerAndImageBuffersFromFrame:(CGRect)fromFrame;
 - (CGRect) visibleBoundsToBlur;
 - (void) recalculateFrame;
@@ -58,21 +62,29 @@
 #error	 or convert your project to Objective-C ARC.
 #endif
 
+void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverContext;
+
 @implementation LFGlassLayer
 @dynamic blurRadius;
 @dynamic scaledSize;
 
 - (id) init {
 	if (self = [super init]) {
-		[self setupLFGlassLayerInstance];
+		[self setup];
 	}
 	return self;
 }
 
 - (id) initWithLayer:(id)layer {
 	if (self = [super initWithLayer:layer]) {
+#ifdef DEBUG
+		NSParameterAssert([layer isKindOfClass:[LFGlassLayer class]]);
+#endif
 		LFGlassLayer *originalLayer = (LFGlassLayer*)layer;
+		[CATransaction begin];
+		[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
 		self.blurRadius = originalLayer.blurRadius;
+		[CATransaction commit];
 		_scaleFactor = originalLayer.scaleFactor;
 		_frameInterval = originalLayer.frameInterval;
 	}
@@ -81,13 +93,24 @@
 
 - (id) initWithCoder:(NSCoder *)aDecoder {
 	if (self = [super initWithCoder:aDecoder]) {
-		[self setupLFGlassLayerInstance];
+		[self setup];
 	}
 	return self;
 }
 
-- (void) setupLFGlassLayerInstance {
+- (void) setup {
+	[CATransaction begin];
+	[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
 	self.blurRadius = 4.0f;
+	[self updatePrecalculatedBlurKernel];
+	[CATransaction commit];
+	
+	[self addObserver:self
+		   forKeyPath:@"blurRadius"
+			  options:0
+			  context:LFGlassLayerBlurRadiusObserverContext];
+	_blurRadiusObserverContext = LFGlassLayerBlurRadiusObserverContext;
+	
 	_backgroundColorLayer = [CALayer layer];
 	_backgroundColorLayer.actions = @{
 		@"bounds": [NSNull null],
@@ -102,15 +125,28 @@
 	};
 	_frameInterval = 1;
 	_currentFrameInterval = 0;
+	[self resetCustomPositioning];
 }
 
 - (void) dealloc {
+	if (_blurRadiusObserverContext) {
+		[self removeObserver:self
+				  forKeyPath:@"blurRadius"
+					 context:LFGlassLayerBlurRadiusObserverContext];
+	}
+	
 	if (_effectInContext) {
 		CGContextRelease(_effectInContext);
 	}
 	if (_effectOutContext) {
 		CGContextRelease(_effectOutContext);
 	}
+}
+
+- (void) updatePrecalculatedBlurKernel {
+	uint32_t radius = (uint32_t)floor(self.blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+	radius += (radius + 1) % 2;
+	_precalculatedBlurKernel = radius;
 }
 
 - (void) setBackgroundColor:(CGColorRef)backgroundColor {
@@ -210,64 +246,53 @@
 }
 
 - (void) setCustomBlurFrame:(CGRect)blurFrame {
-	CGRect newBlurBounds;
-	newBlurBounds.origin.x = 0;
-	newBlurBounds.origin.y = 0;
-	newBlurBounds.size.width = blurFrame.size.width;
-	newBlurBounds.size.height = blurFrame.size.height;
+	CGRect newBlurBounds = (CGRect){ CGPointZero, blurFrame.size };
 	_customBlurBounds = newBlurBounds;
 	
-	CGPoint newBlurAnchorPoint;
-	newBlurAnchorPoint.x = 0.5;
-	newBlurAnchorPoint.y = 0.5;
-	_customBlurAnchorPoint = newBlurAnchorPoint;
+	_customBlurAnchorPoint = (CGPoint){ 0.5, 0.5 };
 	
-	CGPoint newBlurPosition;
-	newBlurPosition.x = blurFrame.origin.x + (newBlurBounds.size.width / 2.0);
-	newBlurPosition.y = blurFrame.origin.y + (newBlurBounds.size.height / 2.0);
-	_customBlurPosition = newBlurPosition;
+	_customBlurPosition = (CGPoint){
+		blurFrame.origin.x + 0.5 * CGRectGetWidth(newBlurBounds),
+		blurFrame.origin.y + 0.5 * CGRectGetHeight(newBlurBounds)
+	};
 	
 	_customBlurFrame = blurFrame;
 }
 
 - (void) resetCustomPositioning {
-	_customBlurBounds = CGRectZero;
-	_customBlurAnchorPoint = CGPointZero;
-	_customBlurPosition = CGPointZero;
-	_customBlurFrame = CGRectZero;
+	_customBlurBounds = CGRectNull;
+	_customBlurAnchorPoint = LFPointNull;
+	_customBlurPosition = LFPointNull;
+	_customBlurFrame = CGRectNull;
 }
 
 - (CGRect) visibleBoundsToBlur {
-	return !CGRectEqualToRect(_customBlurBounds, CGRectZero) ? _customBlurBounds : self.bounds;;
+	return CGRectEqualToRect(_customBlurBounds, CGRectNull) ? self.bounds : _customBlurBounds;
 }
 
 - (CGPoint) visibleAnchorPointToBlur {
-	return !CGPointEqualToPoint(_customBlurAnchorPoint, CGPointZero) ? _customBlurAnchorPoint : self.anchorPoint;
+	return CGPointEqualToPoint(_customBlurAnchorPoint, LFPointNull) ? self.anchorPoint : _customBlurAnchorPoint;
 }
 
 - (CGPoint) visiblePositionToBlur {
-	return !CGPointEqualToPoint(_customBlurPosition, CGPointZero) ? _customBlurPosition : self.position;
+	return CGPointEqualToPoint(_customBlurPosition, LFPointNull) ? self.position : _customBlurPosition;
 }
 
 - (void) recalculateFrame {
-	CGRect frame;
 	CGRect bounds = [self visibleBoundsToBlur];
 	CGPoint anchorPoint = [self visibleAnchorPointToBlur];
 	CGPoint position = [self visiblePositionToBlur];
-	
-	frame.size.width = bounds.size.width;
-	frame.size.height = bounds.size.height;
-	frame.origin.x = -bounds.size.width * anchorPoint.x;
-	frame.origin.y = -bounds.size.height * anchorPoint.y;
-	
-	frame.origin.x += position.x;
-	frame.origin.y += position.y;
-	
-	_customBlurFrame = frame;
+
+	_customBlurFrame = (CGRect){
+		-bounds.size.width * anchorPoint.x + position.x,
+		-bounds.size.height * anchorPoint.y + position.y,
+		bounds.size.width,
+		bounds.size.height
+	};
 }
 
 - (CGRect) visibleFrameToBlur {
-	return !CGRectEqualToRect(_customBlurFrame, CGRectZero) ? _customBlurFrame : self.frame;
+	return CGRectEqualToRect(_customBlurFrame, CGRectNull) ? self.frame : _customBlurFrame;
 }
 
 - (void) recreateImageBuffers {
@@ -338,12 +363,10 @@
 	
 	CALayer *blurTargetLayer = _customBlurTargetLayer ? _customBlurTargetLayer : self.superlayer;
 	
-	// generates a shadow copy
-	LFGlassLayer *presentationLayer = ((LFGlassLayer*)self.presentationLayer);
-	
 #ifdef DEBUG
+	// generates a shadow copy
+	NSParameterAssert(self.presentationLayer);
 	NSParameterAssert(blurTargetLayer);
-	NSParameterAssert(presentationLayer);
 	NSParameterAssert(_effectInContext);
 	NSParameterAssert(_effectOutContext);
 #endif
@@ -357,10 +380,7 @@
 	[blurTargetLayer renderInContext:effectInContext];
 	self.hidden = NO;
 	
-	uint32_t radius = (uint32_t)floor(presentationLayer.blurRadius * 1.87997120597325 + 0.5);
-	// NOTE: this is "(uint32_t)floor(presentationLayer.blurRadius * 0.75 * sqrt(2 * M_PI) + 0.5)"
-	radius += (radius + 1) % 2;
-	uint32_t blurKernel = radius;
+	uint32_t blurKernel = _precalculatedBlurKernel;
 	
 	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 	vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
@@ -374,11 +394,22 @@
 	CGContextRelease(effectOutContext);
 }
 
+- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+	if (context == LFGlassLayerBlurRadiusObserverContext) {
+		[self updatePrecalculatedBlurKernel];
+	} else {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+	}
+}
+
 - (id<CAAction>) actionForKey:(NSString *)event {
 	if ([event isEqualToString:@"blurRadius"]) {
-		CABasicAnimation *blurAnimation = [CABasicAnimation animationWithKeyPath:event];
-		blurAnimation.fromValue = [self.presentationLayer valueForKey:event];
-		return blurAnimation;
+		NSLog(@"actionForKey: for a blur Radius was asked for and reached!");
+//		CABasicAnimation *blurAnimation = [CABasicAnimation animationWithKeyPath:event];
+//		blurAnimation.fromValue = [self.presentationLayer valueForKey:event];
+//		return blurAnimation;
+		
+		// TODO: Use a CATransaction instead of a CABasicAnimation to handle this. Consider copying the layer, then perform a fade transition to make things look good.
 	}
 	
 	return [super actionForKey:event];

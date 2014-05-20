@@ -21,12 +21,14 @@
 //
 
 #import "LFGlassView.h"
+#import "LFGlassLayer.h"
+#import "LFDisplayBridge.h"
 
 @interface LFGlassView ()
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 
-- (void) setupLFGlassViewInstance;
+- (void) setup;
 - (void) handleBlurringOnBoundsChange;
 
 @end
@@ -47,19 +49,19 @@
 
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
-		[self setupLFGlassViewInstance];
+		[self setup];
 	}
 	return self;
 }
 
 - (id) initWithCoder:(NSCoder *)aDecoder {
 	if (self = [super initWithCoder:aDecoder]) {
-		[self setupLFGlassViewInstance];
+		[self setup];
 	}
 	return self;
 }
 
-- (void) setupLFGlassViewInstance {
+- (void) setup {
 	_glassLayer = (LFGlassLayer*)self.layer;
 	self.clipsToBounds = YES;
 	self.userInteractionEnabled = NO;
@@ -151,12 +153,12 @@
 - (void) startLiveBlurringIfReady {
 	if ([self isReadyToLiveBlur]) {
 		[self blurOnceIfPossible];
-		[[LFDisplayBridge sharedInstance] addSubscribedLayer:_glassLayer];
+		[[LFDisplayBridge sharedInstance] addSubscribedObject:_glassLayer];
 	}
 }
 
 - (void) stopLiveBlurring {
-	[[LFDisplayBridge sharedInstance] removeSubscribedLayer:_glassLayer];
+	[[LFDisplayBridge sharedInstance] removeSubscribedObject:_glassLayer];
 }
 
 - (BOOL) isReadyToLiveBlur {

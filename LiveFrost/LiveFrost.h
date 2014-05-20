@@ -20,6 +20,7 @@
 // THE SOFTWARE.
 //
 
+#import <LiveFrost/LFDisplayBridgeTriggering.h>
+#import <LiveFrost/LFDisplayBridge.h>
 #import <LiveFrost/LFGlassLayer.h>
 #import <LiveFrost/LFGlassView.h>
-#import <LiveFrost/LFDisplayBridge.h>

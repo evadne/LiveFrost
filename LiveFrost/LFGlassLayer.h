@@ -22,9 +22,9 @@
 // Contains contributions from Nam Kennic
 //
 
-#import <Accelerate/Accelerate.h>
-#import <QuartzCore/QuartzCore.h>
-#import "LFDisplayBridge.h"
+@import Accelerate.vImage;
+@import QuartzCore.CALayer;
+#import "LFDisplayBridgeTriggering.h"
 
 @interface LFGlassLayer : CALayer <LFDisplayBridgeTriggering>
 
