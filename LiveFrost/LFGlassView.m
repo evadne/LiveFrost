@@ -44,7 +44,6 @@
 #endif
 
 @implementation LFGlassView
-
 @dynamic blurRadius;
 @dynamic scaleFactor;
 @dynamic frameInterval;
@@ -146,14 +145,14 @@
 	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
 }
 
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
+- (NSMethodSignature *) methodSignatureForSelector:(SEL)aSelector {
 	if ([_methodNamesToForwardToLayer containsObject:NSStringFromSelector(aSelector)]) {
 		return [[self.glassLayer class] instanceMethodSignatureForSelector:aSelector];
 	}
 	return [super methodSignatureForSelector:aSelector];
 }
 
-- (void)forwardInvocation:(NSInvocation *)anInvocation {
+- (void) forwardInvocation:(NSInvocation *)anInvocation {
 	if ([self.glassLayer respondsToSelector:[anInvocation selector]]) {
 		[anInvocation invokeWithTarget:self.glassLayer];
 	} else {

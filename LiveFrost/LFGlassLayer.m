@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+// Contains contributions from Nam Kennic
+//
 
 #import "LFGlassLayer.h"
 #import "LFDefines.h"
@@ -406,7 +408,6 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 
 - (id<CAAction>) actionForKey:(NSString *)event {
 	if ([event isEqualToString:@"blurRadius"]) {
-		
 		CATransition *blurAnimation = [CATransition animation];
 		blurAnimation.type = kCATransitionFade;
 		return blurAnimation;
