@@ -411,7 +411,6 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 		
 		CATransition *blurAnimation = [CATransition animation];
 		blurAnimation.type = kCATransitionFade;
-		
 		return blurAnimation;
 	}
 	
