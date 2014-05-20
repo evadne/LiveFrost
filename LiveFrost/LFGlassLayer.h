@@ -19,19 +19,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+// Contains contributions from Nam Kennic
+//
 
+#import <Accelerate/Accelerate.h>
 #import <QuartzCore/QuartzCore.h>
+#import "LFDisplayBridge.h"
 
-@protocol LFDisplayBridgeTriggering <NSObject>
-- (void) refresh;
-@end
+@interface LFGlassLayer : CALayer <LFDisplayBridgeTriggering>
 
-@interface LFDisplayBridge : NSObject <LFDisplayBridgeTriggering>
+@property (nonatomic, assign) CGFloat blurRadius;
+@property (nonatomic, assign) CGFloat scaleFactor;
 
-+ (instancetype) sharedInstance;
+@property (nonatomic, assign) NSUInteger frameInterval;
 
-@property (nonatomic, readonly, assign) CFMutableSetRef subscribedViews;
-- (void) addSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object;
-- (void) removeSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object;
+- (BOOL) blurOnceIfPossible;
+
+// optional properties for greater customization
+@property (nonatomic, weak) CALayer *customBlurTargetLayer;
+@property (nonatomic, assign) CGRect customBlurBounds;
+@property (nonatomic, assign) CGPoint customBlurPosition;
+@property (nonatomic, assign) CGPoint customBlurAnchorPoint;
+@property (nonatomic, assign) CGRect customBlurFrame;
+
+- (void) resetCustomPositioning;
 
 @end

@@ -19,13 +19,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// Contains contributions from Nam Kennic
-//
 
 #import <Accelerate/Accelerate.h>
 #import <QuartzCore/QuartzCore.h>
+#import "LFGlassLayer.h"
 
-@interface LFGlassView : UIView 
+@interface LFGlassView : UIView
 
 @property (nonatomic, assign) CGFloat blurRadius;
 @property (nonatomic, assign) CGFloat scaleFactor;
@@ -35,5 +34,7 @@
 @property (nonatomic, assign, getter=isLiveBlurring) BOOL liveBlurring;
 
 - (BOOL) blurOnceIfPossible;
+
+@property (nonatomic, weak, readonly) LFGlassLayer *glassLayer;
 
 @end

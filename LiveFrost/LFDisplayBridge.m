@@ -22,24 +22,24 @@
 
 #import "LFDisplayBridge.h"
 
-void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *context);
+void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *context);
 
 @interface LFDisplayBridge ()
 
-@property (nonatomic, readwrite, assign) CFMutableSetRef subscribedViews;
+@property (nonatomic, readwrite, assign) CFMutableSetRef subscribedLayers;
 @property (nonatomic, readonly, strong) CADisplayLink *displayLink;
 
 @end
 
-void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *context) {
+void LF_refreshAllSubscribedLayersApplierFunction(const void *value, void *context) {
 	[(__bridge UIView<LFDisplayBridgeTriggering> *)value refresh];
 }
 
 #if !__has_feature(objc_arc)
-	#error This implementation file must be compiled with Objective-C ARC.
+#error This implementation file must be compiled with Objective-C ARC.
 
-	#error Compile this file with the -fobjc-arc flag under your target's Build Phases,
-	#error   or convert your project to Objective-C ARC.
+#error Compile this file with the -fobjc-arc flag under your target's Build Phases,
+#error	 or convert your project to Objective-C ARC.
 #endif
 
 @implementation LFDisplayBridge
@@ -55,32 +55,32 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 
 - (id) init {
 	if (self = [super init]) {
-		_subscribedViews = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
+		_subscribedLayers = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 		_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleDisplayLink:)];
 		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 	}
 	return self;
 }
 
-- (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	CFSetAddValue(_subscribedViews, (__bridge const void*)object);
+- (void) dealloc {
+	[_displayLink invalidate];
+	CFRelease(_subscribedLayers);
 }
 
-- (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
-	CFSetRemoveValue(_subscribedViews, (__bridge const void*)object);
+- (void) addSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object {
+	CFSetAddValue(_subscribedLayers, (__bridge const void*)object);
+}
+
+- (void) removeSubscribedLayer:(CALayer<LFDisplayBridgeTriggering> *)object {
+	CFSetRemoveValue(_subscribedLayers, (__bridge const void*)object);
 }
 
 - (void) handleDisplayLink:(CADisplayLink *)displayLink {
 	[self refresh];
 }
 
-- (void) dealloc {
-	[_displayLink invalidate];
-	CFRelease(_subscribedViews);
-}
-
 - (void) refresh {
-	CFSetApplyFunction(_subscribedViews, LF_refreshAllSubscribedViewsApplierFunction, NULL);
+	CFSetApplyFunction(_subscribedLayers, LF_refreshAllSubscribedLayersApplierFunction, NULL);
 }
 
 @end
