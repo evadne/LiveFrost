@@ -106,9 +106,9 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 	[CATransaction commit];
 	
 	[self addObserver:self
-		   forKeyPath:@"blurRadius"
-			  options:0
-			  context:LFGlassLayerBlurRadiusObserverContext];
+	       forKeyPath:@"blurRadius"
+	          options:0
+	          context:LFGlassLayerBlurRadiusObserverContext];
 	_blurRadiusObserverContext = LFGlassLayerBlurRadiusObserverContext;
 	
 	_backgroundColorLayer = [CALayer layer];
@@ -131,8 +131,8 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 - (void) dealloc {
 	if (_blurRadiusObserverContext) {
 		[self removeObserver:self
-				  forKeyPath:@"blurRadius"
-					 context:LFGlassLayerBlurRadiusObserverContext];
+		          forKeyPath:@"blurRadius"
+		             context:LFGlassLayerBlurRadiusObserverContext];
 	}
 	
 	if (_effectInContext) {
