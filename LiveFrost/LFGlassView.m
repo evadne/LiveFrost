@@ -28,6 +28,9 @@
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 
+@property (nonatomic, assign, readonly) BOOL blurOnceIfPossible;
+@property (nonatomic, strong, readonly) NSSet *methodNamesToForwardToLayer;
+
 - (void) setup;
 - (void) handleBlurringOnBoundsChange;
 
@@ -41,7 +44,12 @@
 #endif
 
 @implementation LFGlassView
+
+@dynamic blurRadius;
+@dynamic scaleFactor;
+@dynamic frameInterval;
 @dynamic liveBlurring;
+@dynamic blurOnceIfPossible;
 
 + (Class) layerClass {
 	return [LFGlassLayer class];
@@ -66,6 +74,7 @@
 	self.clipsToBounds = YES;
 	self.userInteractionEnabled = NO;
 	_shouldLiveBlur = YES;
+	_methodNamesToForwardToLayer = [NSSet setWithObjects:@"blurRadius", @"setBlurRadius:", @"scaleFactor", @"setScaleFactor:", @"frameInterval", @"setFrameInterval:", @"blurOnceIfPossible", nil];
 }
 
 - (void) dealloc {
@@ -88,34 +97,6 @@
 	} else {
 		[self startLiveBlurringIfReady];
 	}
-}
-
-- (CGFloat) blurRadius {
-	return [_glassLayer blurRadius];
-}
-
-- (void) setBlurRadius:(CGFloat)blurRadius {
-	[_glassLayer setBlurRadius:blurRadius];
-}
-
-- (CGFloat) scaleFactor {
-	return [_glassLayer scaleFactor];
-}
-
-- (void) setScaleFactor:(CGFloat)scaleFactor {
-	[_glassLayer setScaleFactor:scaleFactor];
-}
-
-- (NSUInteger) frameInterval {
-	return [_glassLayer frameInterval];
-}
-
-- (void) setFrameInterval:(NSUInteger)frameInterval {
-	[_glassLayer setFrameInterval:frameInterval];
-}
-
-- (BOOL) blurOnceIfPossible {
-	return [_glassLayer blurOnceIfPossible];
 }
 
 - (void) didMoveToSuperview {
@@ -163,6 +144,21 @@
 
 - (BOOL) isReadyToLiveBlur {
 	return (!CGRectIsEmpty(self.bounds) && self.superview && self.window && _shouldLiveBlur);
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
+	if ([_methodNamesToForwardToLayer containsObject:NSStringFromSelector(aSelector)]) {
+		return [[self.glassLayer class] instanceMethodSignatureForSelector:aSelector];
+	}
+	return [super methodSignatureForSelector:aSelector];
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation {
+	if ([self.glassLayer respondsToSelector:[anInvocation selector]]) {
+		[anInvocation invokeWithTarget:self.glassLayer];
+	} else {
+		return [super forwardInvocation:anInvocation];
+	}
 }
 
 @end
