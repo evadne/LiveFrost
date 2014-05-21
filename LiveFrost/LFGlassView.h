@@ -25,7 +25,7 @@
 @interface LFGlassView : UIView
 
 @property (nonatomic, assign) CGFloat blurRadius;
-@property (nonatomic, assign) BOOL animateBlurRadius;
+@property (nonatomic, assign) BOOL blurRadiusAnimationEnabled;
 @property (nonatomic, assign) CGFloat scaleFactor;
 
 @property (nonatomic, assign) NSUInteger frameInterval;
