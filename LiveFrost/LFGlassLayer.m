@@ -404,14 +404,13 @@ void *LFGlassLayerBlurRadiusObserverContext = &LFGlassLayerBlurRadiusObserverCon
 	}
 }
 
-- (id<CAAction>) actionForKey:(NSString *)event {
++ (id<CAAction>) defaultActionForKey:(NSString *)event {
 	if ([event isEqualToString:@"blurRadius"]) {
 		CATransition *blurAnimation = [CATransition animation];
 		blurAnimation.type = kCATransitionFade;
 		return blurAnimation;
 	}
-	
-	return [super actionForKey:event];
+	return [super defaultActionForKey:event];
 }
 
 @end

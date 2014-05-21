@@ -160,4 +160,11 @@
 	}
 }
 
+- (id<CAAction>)actionForLayer:(CALayer *)layer forKey:(NSString *)event {
+	if ([event isEqualToString:@"blurRadius"] && self.animateBlurRadius) {
+		return nil;
+	}
+	return [super actionForLayer:layer forKey:event];
+}
+
 @end
