@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "LiveFrost"
-  s.version      = "1.1.2"
+  s.version      = "2.0"
   s.summary      = "Real time blurring."
   s.homepage     = "https://github.com/radi/LiveFrost"
   s.license      = 'MIT'
@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
     "Evadne Wu" => "ev@radi.ws",
     "Nicholas Gabriel Levin" => "nl@radi.ws"
   }
-  s.source       = { :git => "https://github.com/radi/LiveFrost.git", :tag => "1.1.2" }
+  s.source       = { :git => "https://github.com/radi/LiveFrost.git", :tag => "2.0" }
   s.platform     = :ios, '6.0'
   s.source_files = 'LiveFrost', 'LiveFrost/**/*.{h,m,c}'
   s.exclude_files = 'LiveFrost/Exclude'
